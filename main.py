@@ -18,7 +18,6 @@ class quit_view(discord.ui.View):
 
 	@discord.ui.button(style=discord.ButtonStyle.red, label="Yes")
 	async def confirm(self, interaction: discord.Interaction,  button: discord.ui.Button):
-
 		if interaction.user == self.user:
 			self.stop()
 			await interaction.guild.leave()
@@ -45,11 +44,12 @@ class Bot(commands.Bot):
 
 		battery = json.loads(os.popen("termux-battery-status").read())
 
-		details = f"""Charge: {battery.get("percentage")}%
-Status: {battery.get("status")}
-Temp: {round(battery.get("temperature"))} °C"""
+		details = f"""Battery status:
+{battery.get("percentage")}%
+{battery.get("status")}
+{round(battery.get("temperature"))} °C"""
 
-		activity = discord.Activity(name="Battery status", details=details, type=discord.ActivityType.custom)
+		activity = discord.Game(name=details)
 						
 		await self.change_presence(activity=activity)
 
