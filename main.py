@@ -1,33 +1,46 @@
 import os
+import json
 import discord
 import discord.ext.commands as commands
-    
-TOKEN = 'OTg4MzU2OTA4MTAyNTk0NTgy.GxtTas.sbH8GqVyDbG_M4T96cmOB8iZnCE1-U6QtbDPaI'
+import discord.ext.tasks as tasks
+
+TOKEN_PATH = os.environ.get("BOT_TOKEN")
+TOKEN = None
+MY_ID = 400989403482423296
+
+with open(TOKEN_PATH, 'r') as file:
+	TOKEN = file.read()
 
 class quit_view(discord.ui.View):
-    def __init__(self, user):
-        super().__init__()
-        self.user = user
 
-    @discord.ui.button(style=discord.ButtonStyle.red, label='Да, уходи')
-    async def confirm(self, interaction: discord.Interaction,
-                      button: discord.ui.Button):
-        await interaction.response.defer()
-        if interaction.user == self.user:
-            await interaction.edit_original_response(content='Ладно, я уйду...',
-                                                    view=None)
-            self.stop()
-            await interaction.guild.leave()
+	def __init__(self, user):
+		super().__init__()
+		self.user = user
 
-    @discord.ui.button(style=discord.ButtonStyle.grey, label='Нет, оставайся')
-    async def cancel(self, interaction: discord.Interaction,
-                     button: discord.ui.Button):
-        await interaction.response.defer()
-        if interaction.user == self.user:
-            await interaction.edit_original_response(
-                content='Хорошо, я останусь!', view=None)
-            self.stop()
+	async def interaction_check(self, interaction):
+		if interaction.type is discord.InteractionType.component:
+			return interaction.user == self.user
+		else:
+			return False
 
+	@discord.ui.button(style=discord.ButtonStyle.red, label="Confirm")
+	async def confirm(self, ctx,  button):
+		for child in self.children:
+			child.disabled = True
+		button.label = '> '+button.label+' <'
+		await ctx.edit(content="Nanobuttons, son\nThey disables response on clicked by user\nYou can't kick me, Jack", view=self)
+		self.stop()
+		# await interaction.guild.leave()
+
+	@discord.ui.button(style=discord.ButtonStyle.grey, label="Cancel")
+	async def cancel(self, ctx, button):
+		for child in self.children:
+			child.disabled = True
+		button.label = '> '+button.label+' <'
+		await ctx.edit(content="Command cancelled", view=self)
+		self.stop()
+
+intents = discord.Intents.all()
 
 class TicTacToeButton(discord.ui.Button['TicTacToe']):
     def __init__(self, x: int, y: int):
@@ -35,7 +48,7 @@ class TicTacToeButton(discord.ui.Button['TicTacToe']):
         self.x = x
         self.y = y
 
-    async def callback(self, interaction: discord.Interaction):
+    async def callback(self, interaction):
         global DEBUGUS
         await interaction.response.defer()
         view = self.view
@@ -57,30 +70,30 @@ class TicTacToeButton(discord.ui.Button['TicTacToe']):
             view.board[self.y][self.x] = view.X
             view.current_player = view.O
             if view.player_two:
-                content = f"Крестики нолики: Ожидание хода {view.player_two.mention} :green_circle:"
+                content = f"Tic Tac Toe: Waiting for {view.player_two.mention} :green_circle:"
             else:
-                content = "Крестики нолики: Ожидание хода второго игрока :green_circle:"
+                content = "Tic Tac Toe: Waiting for P2 :green_circle:"
         elif view.current_player == view.O and interaction.user == view.player_two and state not in (
                 view.X, view.O):
             self.style = discord.ButtonStyle.green
             view.board[self.y][self.x] = view.O
             view.current_player = view.X
             if self.view.player_two:
-                content = f"Крестики нолики: Ожидание хода {self.view.player_one.mention} :red_circle:"
+                content = f"Tic Tac Toe: Waiting for {self.view.player_one.mention} :red_circle:"
             else:
-                content = "Крестики нолики: Ожидание хода первого игрока :red_circle:"
+                content = "Tic Tac Toe: Waiting for P1 :red_circle:"
 
         winner = view.check_board_winner()
         if winner is not None:
             if view.player_one == view.player_two:
-                content = "Крестики нолики: Игра закончена"
+                content = "Tic Tac Toe: Game over"
             else:
                 if winner == view.X:
-                    content = f'Крестики нолики: Игра закончена\n{view.player_one.mention} :red_circle: побеждает!\n{view.player_two.mention} :green_circle: проигрывает!'
+                    content = f'Tic Tac Toe: Game over\n{view.player_one.mention} :red_circle: Won!\n{view.player_two.mention} :green_circle: Loses!'
                 elif winner == view.O:
-                    content = f'Крестики нолики: Игра закончена\n{view.player_two.mention} :green_circle: побеждает!\n{view.player_one.mention} :red_circle: проигрывает!'
+                    content = f'Tic Tac Toe: Game over\n{view.player_two.mention} :green_circle: Won!\n{view.player_one.mention} :red_circle: Loses!'
                 else:
-                    content = f'Крестики нолики: Игра закончена\nНичья между {self.view.player_one.mention} :red_circle: и :green_circle: {self.view.player_two.mention}!'
+                    content = f'Tic Tac Toe: Game over\nDraw between {self.view.player_one.mention} :red_circle: and {self.view.player_two.mention} :green_circle:!'
 
             for child in view.children:
                 child.disabled = True
@@ -89,7 +102,6 @@ class TicTacToeButton(discord.ui.Button['TicTacToe']):
 
         view.busy = False
         await interaction.edit_original_response(content=content, view=view)
-
 
 class TicTacToe(discord.ui.View):
     busy = False
@@ -150,65 +162,115 @@ class TicTacToe(discord.ui.View):
         return None
 
 
-intents = discord.Intents.default()
 
 
 class Bot(commands.Bot):
-    def __init__(self, *, intents=intents):
-        super().__init__(command_prefix=commands.when_mentioned_or('!'),
-                         intents=intents)
+	def __init__(self, *, intents=intents):
 
-    async def setup_hook(self):
-        await bot.tree.sync()
+		super().__init__(command_prefix=commands.when_mentioned_or(">_"), strip_after_prefix=True, intents=intents)
 
+	async def on_command_error(self, ctx, exception):
+		await ctx.send(exception)
+
+	async def setup_hook(self):
+		await bot.tree.sync()
 
 bot = Bot()
 
+def is_guild(ctx):
+	if ctx.guild is None:
+		raise commands.CommandError("Error: Guild only command")
+	else:
+		return True
+bot.add_check(is_guild)
 
-@bot.check
-def check(ctx):
-    return False if ctx.guild is None else True
+@tasks.loop(minutes=5.0)
+async def check_battery():
+	try:
+		battery = json.loads(os.popen("termux-battery-status").read())
+		details = f"Battery {battery.get('status').lower()}: {battery.get('percentage')}% {round(battery.get('temperature'))}°C"
 
+		activity = discord.Game(name=details)
+
+	except:
+		check_battery.cancel()
+		details = f"Battery: Not detected"
+		activity = discord.Game(name=details)
+
+	await bot.change_presence(activity=activity)
 
 @bot.event
 async def on_ready():
-    print(f'Запущено под именем {bot.user} (ID: {bot.user.id})')
+	print(f"Name: {bot.user}\nID: {bot.user.id}")
+	await check_battery.start()
 
 
-@bot.tree.command(name='ttt', description='Играть в крестики нолики')
-async def ttt(interaction: discord.Interaction):
-    await interaction.response.send_message(
-        f'Крестики нолики: Ожидание хода первого игрока :red_circle:',
-        view=TicTacToe())
+
+def is_battery_or_owner(bot, user):
+	print(bot.owner_ids)
+	if user.id != MY_ID:
+		raise commands.CommandError("Error: User permission")
+	elif os.system("termux-battery-status") != 0:
+		raise commands.CommandError("Error: Battery not detected")
+	return True
+
+@bot.hybrid_command(name="check_battery", description="Return current battery status")
+async def chk_btr(ctx):
+	await ctx.defer()
+	is_battery_or_owner(bot, ctx.author)
+	battery = json.loads(os.popen("termux-battery-status").read())
+	details = f"""Battery status: {battery.get('status').lower().capitalize()}
+Charge: {battery.get('percentage')}%
+Temperature: {round(battery.get('temperature'))}°C"""
+	await ctx.send(details)
+
+@bot.hybrid_command(name="stop_checking_battery", description="Cancel check_battery task")
+async def stop_chk_btr(ctx):
+	await ctx.defer()
+	is_battery_or_owner(bot, ctx.author)
+	if check_battery.is_running() is True:
+		check_battery.cancel()
+		await bot.change_presence(activity=None)
+		await ctx.send("Checking battery stopped")
+	else:
+		await ctx.send("Already stopped")
+
+@bot.hybrid_command(name="start_checking_battery", description="Starts check_battery task")
+async def start_chk_btr(ctx):
+	await ctx.defer()
+	is_battery_or_owner(bot, ctx.author)
+	if check_battery.is_running() is False:
+		check_battery.start()
+		await ctx.send("Checking battery started")
+	else:
+		await ctx.send("Already started")
 
 
-@bot.tree.command(name='quit', description='Выгнать бота')
-async def quit(interaction: discord.Interaction):
-    if interaction.user.guild_permissions.administrator or interaction.user.id == 400989403482423296:
-        await interaction.response.send_message(
-            'Ты действительно хочешь меня выгнать?',
-            view=quit_view(interaction.user))
-    else:
-        await interaction.response.send_message(
-            f'Я протестую, {interaction.user.mention}!')
 
+@bot.hybrid_command(name='ttt', description='Play Tic Tac Toe')
+async def ttt(ctx):
+    await ctx.send(f'Tic Tac Toe: Waiting for P1 :red_circle:', view=TicTacToe())
 
-@bot.tree.context_menu(name='Delete Interaction')
-async def del_msg(interaction: discord.Interaction, message: discord.Message):
-    await interaction.response.defer(ephemeral=True, thinking=True)
-    if message.interaction:
-        if message.interaction.user == interaction.user:
-            await message.delete()
-            await interaction.followup.send('Сообщение успешно удалено.',
-                                            ephemeral=True)
-        else:
-            await interaction.followup.send(
-                'Вы можете удалять только те сообщения, которые вы создали взаимодействуя со мной.',
-                ephemeral=True)
-    else:
-        await interaction.followup.send(
-            'Вы можете удалять только те сообщения, которые вы создали взаимодействуя со мной.',
-            ephemeral=True)
+@bot.hybrid_command(name="quit", description="Kick bot from this guild")
+async def quit(ctx):
+	if ctx.permissions.administrator:
+		await ctx.send("Are you sure want to kick me?", view=quit_view(ctx.author))
+	else:
+		raise commands.CommandError("Error: User permissions")
 
+@bot.tree.context_menu(name="Delete your interaction")
+async def del_int(interaction: discord.Interaction, message: discord.Message):
+	if message.interaction:
+		if message.interaction.user == interaction.user:
+			await message.delete()
+			await interaction.followup.delete()
+		else:
+			await interaction.response.send_message(
+				"You can delete only the Interactions you have created",
+				ephemeral=True)
+	else:
+		await interaction.response.send_message(
+			"You can delete only the Interactions you have created",
+			ephemeral=True)
 
 bot.run(TOKEN)
