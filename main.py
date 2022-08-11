@@ -72,7 +72,7 @@ async def on_ready():
 async def check_battery():
 	try:
 		battery = json.loads(os.popen("termux-battery-status").read())
-		details = f"Battery {battery.get('status').lower}: {battery.get('percentage')}% {round(battery.get('temperature'))}°C"
+		details = f"Battery {battery.get('status').lower()}: {battery.get('percentage')}% {round(battery.get('temperature'))}°C"
 
 		activity = discord.Game(name=details)
 
@@ -91,6 +91,7 @@ def is_battery():
 
 @bot.hybrid_command(name="check_battery", description="Return current battery status")
 async def chk_btr(ctx):
+	ctx.defer()
 	is_battery()
 	battery = json.loads(os.popen("termux-battery-status").read())
 	details = f"""Battery status: {battery.get('status').lower}
@@ -100,6 +101,7 @@ Temperature: {round(battery.get('temperature'))}°C"""
 
 @bot.hybrid_command(name="stop_checking_battery", description="Cancel check_battery task", check=is_battery)
 async def stop_chk_btr(ctx):
+	ctx.defer()
 	is_battery()
 	if check_battery.is_running() is True:
 		check_battery.cancel()
@@ -110,6 +112,7 @@ async def stop_chk_btr(ctx):
 
 @bot.hybrid_command(name="start_checking_battery", description="Starts check_battery task", check=is_battery)
 async def start_chk_btr(ctx):
+	ctx.defer()
 	is_battery()
 	if check_battery.is_running() is False:
 		check_battery.start()
