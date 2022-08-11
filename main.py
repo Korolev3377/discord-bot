@@ -16,87 +16,128 @@ class quit_view(discord.ui.View):
 		super().__init__()
 		self.user = user
 
+	async def interaction_check(self, interaction):
+		if interaction.type is discord.InteractionType.component:
+			return interaction.user == self.user
+		else:
+			return False
+
 	@discord.ui.button(style=discord.ButtonStyle.red, label="Yes")
-	async def confirm(self, interaction: discord.Interaction,  button: discord.ui.Button):
-		if interaction.user == self.user:
-			self.stop()
-			await interaction.guild.leave()
+	async def confirm(self, interaction,  button):
+		for child in self.children:
+			child.disabled = True
+		button.label = '> '+button.label+' <'
+		await interaction.response.edit_message(content="Bye :(", view=self)
+		self.stop()
+		# await interaction.guild.leave()
 
 	@discord.ui.button(style=discord.ButtonStyle.grey, label="No")
-	async def cancel(self, interaction: discord.Interaction, button: discord.ui.Button):
-
-		if interaction.user == self.user:
-			self.stop()
+	async def cancel(self, interaction, button):
+		for child in self.children:
+			child.disabled = True
+		button.label = '> '+button.label+' <'
+		await interaction.response.edit_message(content="Command cancelled", view=self)
+		self.stop()
 
 intents = discord.Intents.default()
+
 
 class Bot(commands.Bot):
 	def __init__(self, *, intents=intents):
 
-		super().__init__(command_prefix=commands.when_mentioned_or("!"), intents=intents)
+		super().__init__(command_prefix=commands.when_mentioned_or(">_"), intents=intents)
 
-	@tasks.loop(minutes=5.0)
-	async def check_battery(self):
-
-		details = ''
-		if os.system("termux-battery-status") != 0:
-			self.check_battery.cancel()
-
-		battery = json.loads(os.popen("termux-battery-status").read())
-
-		details = f"""Battery status:
-{battery.get("percentage")}%
-{battery.get("status")}
-{round(battery.get("temperature"))} °C"""
-
-		activity = discord.Game(name=details)
-						
-		await self.change_presence(activity=activity)
+	async def on_command_error(self, ctx, exception):
+		await ctx.send(exception)
 
 	async def setup_hook(self):
 		await bot.tree.sync()
 
 bot = Bot()
 
+def is_guild(ctx):
+	if ctx.guild is None:
+		raise commands.CommandError("Error: Guild only command")
+	else:
+		return True
+bot.add_check(is_guild)
+
 @bot.event
 async def on_ready():
-	print(f"Name#tag: {bot.user}\nID: {bot.user.id}")
-	await bot.check_battery.start()
+	print(f"Name: {bot.user}\nID: {bot.user.id}")
+	await check_battery.start()
 
-@bot.check
-def is_guild(ctx):
-	return ctx.guild is not None
 
-def is_owner_or_admin(ctx):
-	return ctx.author.id in bot.owner_ids or ctx.author.guild_permissions.administrator
+@tasks.loop(minutes=5.0)
+async def check_battery():
+	try:
+		battery = json.loads(os.popen("termux-battery-status").read())
+		details = f"Battery {battery.get('status').lower}: {battery.get('percentage')}% {round(battery.get('temperature'))}°C"
 
-@bot.tree.command(name="quit", description="Kick bot")
-@commands.check(is_owner_or_admin)
-async def quit(interaction: discord.Interaction):
+		activity = discord.Game(name=details)
 
-	await interaction.response.send_message( "Are you sure want to kick me?", ephemeral=True, view=quit_view(interaction.user))
+	except:
+		check_battery.cancel()
+		details = f"Battery: Not detected"
+		activity = discord.Game(name=details)
 
-@quit.error
-async def check_errors(ctx, error):
+	await bot.change_presence(activity=activity)
 
-	if isinstance(error, commands.errors.MissingPermissions):
-		await ctx.send("Permission Error", ephemeral=True)
-	
+
+def is_battery():
+	if os.system("termux-battery-status") != 0:
+		raise commands.CommandError("Error: Battery not detected")
+	return True
+
+@bot.hybrid_command(name="check_battery", description="Return current battery status")
+async def chk_btr(ctx):
+	is_battery()
+	battery = json.loads(os.popen("termux-battery-status").read())
+	details = f"""Battery status: {battery.get('status').lower}
+Charge: {battery.get('percentage')}%
+Temperature: {round(battery.get('temperature'))}°C"""
+	await ctx.send(details)
+
+@bot.hybrid_command(name="stop_checking_battery", description="Cancel check_battery task", check=is_battery)
+async def stop_chk_btr(ctx):
+	is_battery()
+	if check_battery.is_running() is True:
+		check_battery.cancel()
+		bot.change_presence(activity=None)
+		await ctx.send("Checking battery stopped")
+	else:
+		await ctx.send("Already stopped")
+
+@bot.hybrid_command(name="start_checking_battery", description="Starts check_battery task", check=is_battery)
+async def start_chk_btr(ctx):
+	is_battery()
+	if check_battery.is_running() is False:
+		check_battery.start()
+		await ctx.send("Checking battery started")
+	else:
+		await ctx.send("Already started")
+
+
+@bot.hybrid_command(name="quit", description="Kick bot from this guild")
+async def quit(ctx):
+	if ctx.permissions.administrator:
+		await ctx.send("Are you sure want to kick me?", view=quit_view(ctx.author))
+	else:
+		raise commands.CommandError("Error: User permissions")
+
+
 @bot.tree.context_menu(name="Delete your interaction")
 async def del_int(interaction: discord.Interaction, message: discord.Message):
-
-	await interaction.response.defer(ephemeral=True, thinking=True)
-
 	if message.interaction:
 		if message.interaction.user == interaction.user:
 			await message.delete()
-			await interaction.delete_original_response()
+			await interaction.followup.delete()
 		else:
-			await interaction.followup.send(
+			await interaction.response.send_message(
 				"You can delete only the Interactions you have created",
 				ephemeral=True)
 	else:
-		await interaction.followup.send(
+		await interaction.response.send_message(
 			"You can delete only the Interactions you have created",
 			ephemeral=True)
 
