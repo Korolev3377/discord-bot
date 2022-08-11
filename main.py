@@ -259,18 +259,15 @@ async def quit(ctx):
 		raise commands.CommandError("Error: User permissions")
 
 @bot.tree.context_menu(name="Delete your interaction")
-async def del_int(interaction: discord.Interaction, message: discord.Message):
-	if message.interaction:
-		if message.interaction.user == interaction.user:
-			await message.delete()
-			await interaction.followup.delete()
-		else:
-			await interaction.response.send_message(
-				"You can delete only the Interactions you have created",
-				ephemeral=True)
-	else:
-		await interaction.response.send_message(
-			"You can delete only the Interactions you have created",
-			ephemeral=True)
+async def del_int(interaction, message: discord.Message):
+    await interaction.response.defer(ephemeral=True, thinking=True)
+    if message.interaction:
+        if message.interaction.user == interaction.user:
+            await message.delete()
+            await interaction.followup.send("Deleted successfully", ephemeral=True)
+        else:
+            await interaction.followup.send("You can delete only the Interactions you have created", ephemeral=True)
+    else:
+        await interaction.followup.send("You can delete only the Interactions you have created", ephemeral=True)
 
 bot.run(TOKEN)
