@@ -1,15 +1,27 @@
-import os, sys, json
+import os, sys, asyncio, json
 import discord
-from discord.ext import commands, tasks
+from discord.ext import commands
 
-def load_globals(**vals):
-	for val in vals:
-		globals()[f'{val.upper()}'] = vals.get(val)
-
-class Quit:
-	#def __init__(self, ctx):
-	#	self.ctx = ctx
+class Admin:
+	def __init__(self, BOT):
+		@BOT.hybrid_command(name="quit", description="Kick bot from this guild")
+		async def quit(ctx):
+			if ctx.permissions.administrator:
+				await ctx.send("Are you sure want to Kick me?", view=self.View(ctx.author, "QUIT"))
+			else:
+				raise commands.CommandError("Error: User permissions")
 		
+		@BOT.hybrid_command(name="exit", description="Stop bot")
+		async def exit(ctx):
+			if await BOT.is_owner(ctx.author):
+				await ctx.send("Are you sure want to Stop me?", view=self.View(ctx.author, "EXIT"))
+			else:
+				raise commands.CommandError("Error: User permissions")
+	
+		@BOT.tree.context_menu(name="Is owner")
+		async def chk_owner(interaction: discord.Interaction, user: discord.Member):
+			await interaction.response.send_message("User {} is owner - {}".format(user, await BOT.is_owner(user)), ephemeral=True)
+
 	class View(discord.ui.View):
 		def __init__(self, user, type):
 			super().__init__()
@@ -44,21 +56,12 @@ class Quit:
 			await interaction.response.edit_message(content="Command cancelled", view=self)
 			self.stop()
 			
-	@commands.command(name="quit", description="Kick bot from this guild")
-	async def quit(ctx, *args):
-		if ctx.permissions.administrator:
-			await ctx.send("Are you sure want to Kick me?", view=Quit.View(ctx.author, "QUIT"))
-		else:
-			raise commands.CommandError("Error: User permissions")
+class Games:	
+	def __init__(self, BOT):
+		@BOT.hybrid_command(name='ttt', description='Play Tic Tac Toe')
+		async def ttt(ctx):
+			await ctx.send(f'Tic Tac Toe: Waiting for Player one :red_circle:', view=self.View())
 			
-	@commands.command(name="exit", description="Stop bot")
-	async def exit(ctx, *args):
-		if ctx.author.id == 400989403482423296:
-			await ctx.send("Are you sure want to Stop me?", view=Quit.View(ctx.author, "EXIT"))
-		else:
-			raise commands.CommandError("Error: User permissions")
-			
-class TicTacToe:	
 	class View(discord.ui.View):
 		busy = False
 		player_one = None
@@ -138,8 +141,7 @@ class TicTacToe:
 				elif view.player_two is None:
 					view.player_two = interaction.user
 
-				if view.current_player == view.X and interaction.user == view.player_one and state not in (
-						view.X, view.O):
+				if view.current_player == view.X and interaction.user == view.player_one and state not in (view.X, view.O):
 					self.style = discord.ButtonStyle.red
 					view.board[self.y][self.x] = view.X
 					view.current_player = view.O
@@ -147,8 +149,7 @@ class TicTacToe:
 						content = f"Tic Tac Toe: Waiting for {view.player_two.mention} :green_circle:"
 					else:
 						content = "Tic Tac Toe: Waiting for Player two :green_circle:"
-				elif view.current_player == view.O and interaction.user == view.player_two and state not in (
-						view.X, view.O):
+				elif view.current_player == view.O and interaction.user == view.player_two and state not in (view.X, view.O):
 					self.style = discord.ButtonStyle.green
 					view.board[self.y][self.x] = view.O
 					view.current_player = view.X
@@ -174,52 +175,51 @@ class TicTacToe:
 
 					view.stop()
 
-				view.busy = False
 				await interaction.edit_original_response(content=content, view=view)
-			
-	@commands.hybrid_command(name='ttt', description='Play Tic Tac Toe')
-	async def ttt(ctx, *args):
-		await ctx.send(f'Tic Tac Toe: Waiting for Player one :red_circle:', view=TicTacToe.View())
+				asyncio.wait(1)
+				view.busy = False
 		
 class Battery:
-	def is_battery_or_owner(ctx):
-		if ctx.author.id != 400989403482423296:
-			raise commands.CommandError("Error: User permission")
-		elif not os.popen("uname -o").read() == "Android\n":
-			raise commands.CommandError("Error: Battery not detected")
-		return True
-	
-	@commands.hybrid_group(name="battery", invoke_without_command=True)
-	@commands.check(is_battery_or_owner)
-	async def battery(ctx, *args):
-		pass
-	
-	@battery.command(name="check")
-	async def chk(ctx, *args):
-		await ctx.defer()
-		battery = json.loads(os.popen("termux-battery-status").read())
-		details = f"""Battery status: {battery.get('status').lower().capitalize()}
+	def __init__(self, BOT):
+		def is_battery_and_owner(ctx):
+			check = BOT.is_owner(user).predicate
+			async def extended_check(ctx):
+				if await check(ctx.author):
+					raise commands.CommandError("Error: User permission")
+				elif not os.popen("uname -o").read() == "Android\n":
+					raise commands.CommandError("Error: Battery not detected")
+				return True
+			return commands.check(extended_check)
+			
+		@BOT.hybrid_group(name="battery", invoke_without_command=True)
+		@commands.check(is_battery_and_owner)
+		async def battery(ctx):
+			pass
+		
+		@battery.command(name="check")
+		async def chk(ctx):
+			await ctx.defer()
+			battery = json.loads(os.popen("termux-battery-status").read())
+			details = f"""Battery status: {battery.get('status').lower().capitalize()}
 Charge: {battery.get('percentage')}%
 Temperature: {round(battery.get('temperature'))}°C"""
-		await ctx.send(details)
+			await ctx.send(details, ephemeral=True)
 
-	@battery.command(name="stop", enabled=False)
-	async def stop(ctx, *args):
-		global BOT, TASK
-		await ctx.defer()
-		if TASK.is_running() is True:
-			TASK.cancel()
-			await BOT.change_presence(activity=None)
-			await ctx.send("Checking battery stopped")
-		else:
-			await ctx.send("Already stopped")
+		@battery.command(name="stop", enabled=False)
+		async def stop(ctx):
+			await ctx.defer()
+			if BOT.task.is_running() is True:
+				BOT.task.cancel()
+				await BOT.change_presence(activity=None)
+				await ctx.send("Checking battery stopped", ephemeral=True)
+			else:
+				await ctx.send("Already stopped", ephemeral=True)
 
-	@battery.command(name="start", enabled=False)
-	async def start(ctx, *args):
-		global TASK
-		await ctx.defer()
-		if TASK.is_running() is False:
-			TASK.start()
-			await ctx.send("Checking battery started")
-		else:
-			await ctx.send("Already started")
+		@battery.command(name="start", enabled=False)
+		async def start(ctx):
+			await ctx.defer()
+			if BOT.task.is_running() is False:
+				BOT.task.start()
+				await ctx.send("Checking battery started", ephemeral=True)
+			else:
+				await ctx.send("Already started", ephemeral=True)

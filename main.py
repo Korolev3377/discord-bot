@@ -13,60 +13,48 @@ with open(TOKEN_PATH, 'r') as file:
 class Bot(commands.Bot):
 	def __init__(self):
 		super().__init__(command_prefix=commands.when_mentioned_or(">_"), strip_after_prefix=True, intents=discord.Intents.all())
-
+		
+		@tasks.loop(minutes=1.0)
+		async def CHK_BTR():
+			if os.popen("uname -o").read() == "Android\n":
+				battery = json.loads(os.popen("termux-battery-status").read())
+				
+				details = f"Battery {battery.get('status').lower()}: {battery.get('percentage')}% {round(battery.get('temperature'))}°C"
+				
+				activity = discord.Game(name=details)
+				await self.change_presence(activity=activity)
+			else:
+				CHK_BTR.cancel()
+		
+		self.task = CHK_BTR
+		self.admin = cmds.Admin(self)
+		self.games = cmds.Games(self)
+		self.battery = cmds.Battery(self)
+		
 	async def on_command_error(self, ctx, exception):
-		await ctx.send(exception)
+		await ctx.send(exception, ephemeral=True)
 
-bot = Bot()
+BOT = Bot()
 
-@tasks.loop(minutes=1.0)
-async def check_battery():
-	if os.popen("uname -o").read() == "Android\n":
-		battery = json.loads(os.popen("termux-battery-status").read())
-		
-		details = f"Battery {battery.get('status').lower()}: {battery.get('percentage')}% {round(battery.get('temperature'))}°C"
-		
-		activity = discord.Game(name=details)
-	else:
-		check_battery.cancel()
-		details = f"Battery: Not detected"
-		activity = discord.Game(name=details)
-		
-	await bot.change_presence(activity=activity)
-
-cmds.load_globals(bot=bot, task=check_battery)
-
-quit = cmds.Quit()
-tictactoe = cmds.TicTacToe()
-battery = cmds.Battery()
-
-bot.add_command(quit.quit)
-bot.add_command(quit.exit)
-bot.add_command(tictactoe.ttt)
-bot.add_command(battery.battery)
-
-@bot.check
+@BOT.check
 def is_guild(ctx):
 	if ctx.guild is None:
 		raise commands.CommandError("Error: Guild only command")
 	else:
 		return True
 
-@bot.event
+@BOT.event
 async def on_ready():
-	print(f"Name: {bot.user}\nID: {bot.user.id}")
-	await check_battery.start()
+	print(f"Name: {BOT.user}\nID: {BOT.user.id}")
+	await BOT.tree.sync()
+	await BOT.task.start()
+	
+@BOT.event
+async def on_member_join(member: discord.Member):
+	await member.guild.system_channel.send("{user} joined this Guild".format(user=member.mention))
+	
+@BOT.event
+async def on_member_remove(member: discord.Member):
+	await member.guild.system_channel.send("{user} left this Guild".format(user=member.mention))
 
-@bot.tree.context_menu(name="Delete your interaction")
-async def del_int(interaction, message: discord.Message):
-    await interaction.response.defer(ephemeral=True, thinking=True)
-    if message.interaction:
-        if message.interaction.user == interaction.user:
-            await message.delete()
-            await interaction.followup.send("Deleted successfully", ephemeral=True)
-        else:
-            await interaction.followup.send("You can delete only the Interactions you have created", ephemeral=True)
-    else:
-        await interaction.followup.send("You can delete only the Interactions you have created", ephemeral=True)
-
-bot.run(TOKEN)
+BOT.run(TOKEN)
