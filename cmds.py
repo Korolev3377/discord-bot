@@ -1,26 +1,79 @@
 import os, sys, asyncio, json
 import discord
 from discord.ext import commands
+from bf import Brainfuck
+BF = Brainfuck()
 
 class Admin:
 	def __init__(self, BOT):
-		@BOT.hybrid_command(name="quit", description="Kick bot from this guild")
+		@BOT.group(name="admin", description="Admin's commands", hidden=True)
+		async def admin(ctx):
+			pass
+				
+		@admin.command(name="quit", description="Kick bot from this guild", hidden=True)
 		async def quit(ctx):
 			if ctx.permissions.administrator:
 				await ctx.send("Are you sure want to Kick me?", view=self.View(ctx.author, "QUIT"))
 			else:
 				raise commands.CommandError("Error: User permissions")
 		
-		@BOT.hybrid_command(name="exit", description="Stop bot")
+		@admin.command(name="exit", aliases=["stop"], description="Stop bot", hidden=True)
 		async def exit(ctx):
 			if await BOT.is_owner(ctx.author):
 				await ctx.send("Are you sure want to Stop me?", view=self.View(ctx.author, "EXIT"))
 			else:
 				raise commands.CommandError("Error: User permissions")
-	
-		@BOT.tree.context_menu(name="Is owner")
-		async def chk_owner(interaction: discord.Interaction, user: discord.Member):
-			await interaction.response.send_message("User {} is owner - {}".format(user, await BOT.is_owner(user)), ephemeral=True)
+		
+		@BOT.hybrid_command(name="bf", aliases=["brainfuck"], description="Execute brainfuck code", usage="bf <code> <input>")
+		async def help(ctx, code: str, *, input: str = None):
+			await ctx.send("`"+BF.run(code, input)+"`")
+		
+		def signatures(cmd_list):
+			to_return = []
+			for cmd in cmd_list:
+				to_return.append("%s - %s" % (cmd.name, cmd.description or "..."))
+			return "\n".join(to_return)
+		
+		def get_commands(group, non_hidden=True):
+			return [cmd for cmd in group.commands if not cmd.hidden] if non_hidden else group.commands
+		
+		def get_help(cmd):
+			desc = cmd.description
+			usage = cmd.usage
+			doc = cmd.help
+			if type(cmd) is commands.Group or type(cmd) is commands.HybridGroup:
+				parents = "\n".join([cmd.name for cmd in cmd.commands])
+			else: parents = None
+			help_doc = []
+			if desc:
+				help_doc.append("Description: "+desc)
+			if usage:
+				help_doc.append("Usage: "+usage)
+			if doc:
+				help_doc.append(doc)
+			if parents:
+				help_doc.append("Subcommands:\n"+parents)
+			return "\n".join(help_doc)
+		
+		@BOT.hybrid_command(name="help", description="Help command", usage="help <command>")
+		async def help(ctx, *, command=None):
+			embed = discord.Embed(title="Help")
+			cmds = get_commands(BOT)
+			if not command:
+				embed.add_field(name="Available commands:",
+					value=signatures(cmds),
+					inline=False)
+				await ctx.send(embed=embed)
+			else:
+				sub = BOT
+				for arg in command.split():
+					sub = sub.get_command(arg)
+					if not sub:
+						raise commands.CommandError("Error: Command \"{}\" not found".format(arg))
+				embed.add_field(name="Command \"%s\":" % (sub.qualified_name),
+					value=get_help(sub),
+					inline=False)
+				await ctx.send(embed=embed)
 
 	class View(discord.ui.View):
 		def __init__(self, user, type):
@@ -58,7 +111,7 @@ class Admin:
 			
 class Games:	
 	def __init__(self, BOT):
-		@BOT.hybrid_command(name='ttt', description='Play Tic Tac Toe')
+		@BOT.hybrid_command(name='tictactoe', aliases=["ttt"], description='Play Tic Tac Toe game')
 		async def ttt(ctx):
 			await ctx.send(f'Tic Tac Toe: Waiting for Player one :red_circle:', view=self.View())
 			
@@ -176,50 +229,58 @@ class Games:
 					view.stop()
 
 				await interaction.edit_original_response(content=content, view=view)
-				asyncio.wait(1)
+				await asyncio.sleep(1)
 				view.busy = False
 		
 class Battery:
-	def __init__(self, BOT):
-		def is_battery_and_owner(ctx):
-			check = BOT.is_owner(user).predicate
-			async def extended_check(ctx):
-				if await check(ctx.author):
-					raise commands.CommandError("Error: User permission")
-				elif not os.popen("uname -o").read() == "Android\n":
-					raise commands.CommandError("Error: Battery not detected")
-				return True
-			return commands.check(extended_check)
-			
-		@BOT.hybrid_group(name="battery", invoke_without_command=True)
-		@commands.check(is_battery_and_owner)
+	def __init__(self, BOT):			
+		@BOT.group(name="battery", description="Battery's commands", hidden=True, invoke_without_command=True)
 		async def battery(ctx):
-			pass
+			await ctx.defer()
+			if not await BOT.is_owner(ctx.author):
+				raise commands.CommandError("Error: User permission")
+			elif not os.popen("uname -o").read() == "Android\n":
+				raise commands.CommandError("Error: Battery not detected")
+			await ctx.send("Enter a subcommand:\n{}".format("\n".join([cmd.name for cmd in ctx.command.commands])))
 		
-		@battery.command(name="check")
+		@battery.command(name="check", description='Check current battery status')
 		async def chk(ctx):
 			await ctx.defer()
+			if not await BOT.is_owner(ctx.author):
+				raise commands.CommandError("Error: User permission")
+			elif not os.popen("uname -o").read() == "Android\n":
+				raise commands.CommandError("Error: Battery not detected")
 			battery = json.loads(os.popen("termux-battery-status").read())
 			details = f"""Battery status: {battery.get('status').lower().capitalize()}
 Charge: {battery.get('percentage')}%
 Temperature: {round(battery.get('temperature'))}°C"""
 			await ctx.send(details, ephemeral=True)
 
-		@battery.command(name="stop", enabled=False)
+		@battery.command(name="stop", description='Stop check battery task')
 		async def stop(ctx):
 			await ctx.defer()
-			if BOT.task.is_running() is True:
-				BOT.task.cancel()
+			if not await BOT.is_owner(ctx.author):
+				raise commands.CommandError("Error: User permission")
+			elif not os.popen("uname -o").read() == "Android\n":
+				raise commands.CommandError("Error: Battery not detected")
+			if BOT.CHK_BTR.is_running() is True:
+				BOT.run_task = False
+				BOT.CHK_BTR.cancel()
 				await BOT.change_presence(activity=None)
-				await ctx.send("Checking battery stopped", ephemeral=True)
+				await ctx.send("Checking battery stopped")
 			else:
-				await ctx.send("Already stopped", ephemeral=True)
+				await ctx.send("Already stopped")
 
-		@battery.command(name="start", enabled=False)
+		@battery.command(name="start", description='Start check battery task')
 		async def start(ctx):
 			await ctx.defer()
-			if BOT.task.is_running() is False:
-				BOT.task.start()
-				await ctx.send("Checking battery started", ephemeral=True)
+			if not await BOT.is_owner(ctx.author):
+				raise commands.CommandError("Error: User permission")
+			elif not os.popen("uname -o").read() == "Android\n":
+				raise commands.CommandError("Error: Battery not detected")
+			if BOT.CHK_BTR.is_running() is False:
+				BOT.run_task = True
+				BOT.CHK_BTR.start()
+				await ctx.send("Checking battery started")
 			else:
-				await ctx.send("Already started", ephemeral=True)
+				await ctx.send("Already started")

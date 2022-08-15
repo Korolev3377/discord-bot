@@ -12,24 +12,28 @@ with open(TOKEN_PATH, 'r') as file:
 
 class Bot(commands.Bot):
 	def __init__(self):
-		super().__init__(command_prefix=commands.when_mentioned_or(">_"), strip_after_prefix=True, intents=discord.Intents.all())
+		super().__init__(command_prefix=commands.when_mentioned_or(">_", "!"), help_command=None, strip_after_prefix=True, intents=discord.Intents.all())
+		self.run_task = True
 		
-		@tasks.loop(minutes=1.0)
-		async def CHK_BTR():
-			if os.popen("uname -o").read() == "Android\n":
-				battery = json.loads(os.popen("termux-battery-status").read())
+	@tasks.loop(minutes=1.0)
+	async def CHK_BTR(self):
+		if os.popen("uname -o").read() == "Android\n" and self.run_task:
+			battery = json.loads(os.popen("termux-battery-status").read())
+			
+			details = f"Battery {battery.get('status').lower()}: {battery.get('percentage')}% {round(battery.get('temperature'))}°C"
+			
+			activity = discord.Game(name=details)
+			await self.change_presence(activity=activity)
+		else:
+			self.run_task = False
+			CHK_BTR.cancel()
 				
-				details = f"Battery {battery.get('status').lower()}: {battery.get('percentage')}% {round(battery.get('temperature'))}°C"
-				
-				activity = discord.Game(name=details)
-				await self.change_presence(activity=activity)
-			else:
-				CHK_BTR.cancel()
-		
-		self.task = CHK_BTR
+	async def setup_hook(self):
 		self.admin = cmds.Admin(self)
 		self.games = cmds.Games(self)
 		self.battery = cmds.Battery(self)
+	
+		await self.tree.sync()
 		
 	async def on_command_error(self, ctx, exception):
 		await ctx.send(exception, ephemeral=True)
@@ -40,14 +44,15 @@ BOT = Bot()
 def is_guild(ctx):
 	if ctx.guild is None:
 		raise commands.CommandError("Error: Guild only command")
-	else:
-		return True
+	return True
+	
+def check(msg):
+	return msg == ctx.message
 
 @BOT.event
 async def on_ready():
 	print(f"Name: {BOT.user}\nID: {BOT.user.id}")
-	await BOT.tree.sync()
-	await BOT.task.start()
+	await BOT.CHK_BTR.start()
 	
 @BOT.event
 async def on_member_join(member: discord.Member):
