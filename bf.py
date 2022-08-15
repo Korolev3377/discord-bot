@@ -1,7 +1,7 @@
 from discord.ext import commands
 class Brainfuck:
 	def check(self, code):
-		return [char for char in code if char in "><+-.,[]"]
+		return [char for char in code if char in "><+-.,[]$"]
 
 	def bracket(self, code):
 		map = {}
@@ -14,10 +14,27 @@ class Brainfuck:
 				map[pos] = last_pos
 				map[last_pos] = pos
 		return map
-
+	
+	def cp1251(self, char):
+		if type(char) is str:
+			if ord(char) > 255:
+				try:
+					return char.encode("cp1251")
+				except:
+					return char
+			else:
+				return char
+		elif type(char) is int:
+			try:
+				return chr(char).encode("cp1252").decode("cp1251")
+			except:
+				return chr(char)
+		else:
+			return 0
+			
 	def run(self, code, inp=None):
 		if inp:
-			inp = [ord(i) for i in inp]
+			inp = [ord(self.cp1251(i)) for i in inp]
 		code = self.check(code)
 		brackets = self.bracket(code)
 		memory = [0 for _ in range(256)]
@@ -35,15 +52,17 @@ class Brainfuck:
 				memory[cursor] += 1
 			elif code[i] == "-":
 				memory[cursor] -= 1
+			elif code[i] == "@":
+				memory = [0 for _ in range(256)]
 			elif code[i] == ".":
-				char = chr(memory[cursor])
+				char = self.cp1251(memory[cursor])
 				if char != "`":
 					out.append(char)
 			elif code[i] == ",":
 				if inp:
 					memory[cursor] = inp.pop(0)
 				else:
-					raise commands.CommandError("Brainfuck error: Not enough inputs")
+					memory[cursor] = 0
 			elif code[i] == '[':
 				if not memory[cursor]:
 					i = brackets[i]
@@ -55,7 +74,7 @@ class Brainfuck:
 			elif memory[cursor] > 255:
 				memory[cursor] = 0
 			if timer < 0:
-				raise commands.CommandError("Brainfuck error: Too many cycles")
+				return "".join(out)
 			timer -= 1
 			i += 1
 		return "".join(out)
