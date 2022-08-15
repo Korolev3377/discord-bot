@@ -1,7 +1,7 @@
 from discord.ext import commands
 class Brainfuck:
 	def check(self, code):
-		return [char for char in code if char in "><+-.,[]$"]
+		return [char for char in code if char in "><+-.,[]%"]
 
 	def bracket(self, code):
 		map = {}
@@ -52,7 +52,7 @@ class Brainfuck:
 				memory[cursor] += 1
 			elif code[i] == "-":
 				memory[cursor] -= 1
-			elif code[i] == "@":
+			elif code[i] == "%":
 				memory = [0 for _ in range(256)]
 			elif code[i] == ".":
 				char = self.cp1251(memory[cursor])
