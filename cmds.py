@@ -1,8 +1,10 @@
 import os, sys, asyncio, json
 import discord
 from discord.ext import commands
+
 from bf import Brainfuck
 BF = Brainfuck()
+import gol
 
 class Admin:
 	def __init__(self, BOT):
@@ -24,8 +26,8 @@ class Admin:
 			else:
 				raise commands.CommandError("Error: User permissions")
 		
-		@BOT.hybrid_command(name="bf", aliases=["brainfuck"], description="Execute brainfuck code", usage="bf <code> <input>")
-		async def help(ctx, code: str, *, input: str = None):
+		@BOT.hybrid_command(name="brainfuck", aliases=["bf"], description="Execute brainfuck code", usage="bf <code> <input>")
+		async def bf(ctx, code: str, *, input: str = None):
 			await ctx.send("`"+BF.run(code, input)+"`")
 		
 		def signatures(cmd_list):
@@ -111,10 +113,101 @@ class Admin:
 			
 class Games:	
 	def __init__(self, BOT):
-		@BOT.hybrid_command(name='tictactoe', aliases=["ttt"], description='Play Tic Tac Toe game')
+		@BOT.hybrid_group(name='game', aliases=["games"], description='Play game', invoke_without_command=True)
+		async def game(ctx):
+			pass
+				
+		@game.command(name='tictactoe', aliases=["ttt"], description='Tic Tac Toe game')
 		async def ttt(ctx):
 			await ctx.send(f'Tic Tac Toe: Waiting for Player one :red_circle:', view=self.View())
 			
+		@game.command(name='gameoflife', aliases=["gol"], description='Game of life')
+		async def gol(ctx):
+			await ctx.send(view=self.GolView(ctx.author))
+	
+	class GolView(discord.ui.View):
+		size = 12
+		runing = False
+		def __init__(self, author):
+			super().__init__()
+			self.GOL = gol.GameOfLife(7)
+			self.user = author
+			button_layers = [
+			[None,		"up",		"play"	],
+			["left",	"flip",		"right"	],
+			[None,		"down",		"quit"	]
+			]
+			for y, layer in enumerate(button_layers):
+				for button_type in layer:
+					self.add_item(self.ButtonBlank(custom_id=button_type, row=y))
+			
+		def render(self):
+			field = self.GOL.field.print_field()
+			rendered_field = []
+			for sym in field:
+				if sym == "0":
+					rendered_field.append((":red_circle:", ":green_circle:")[self.runing])
+				elif sym == "1":
+					rendered_field.append(":small_blue_diamond:")
+				elif sym == "2":
+					rendered_field.append(":arrow_down:")
+				elif sym == "3":
+					rendered_field.append(":arrow_right:")
+				elif sym == "█":
+					rendered_field.append(":white_medium_square:")
+				elif sym == "░":
+					rendered_field.append(":black_large_square:")
+				elif sym == "\n":
+					rendered_field.append("\n")
+			return "".join(rendered_field)
+			
+		class ButtonBlank(discord.ui.Button):
+			def __init__(self, style=discord.ButtonStyle.gray, label=" ", disabled=True, custom_id=None, row=0):
+				if custom_id == "up":
+					super().__init__(style=style, label="⏫", row=row)
+				elif custom_id == "left":
+					super().__init__(style=style, label="⏪", row=row)
+				elif custom_id == "right":
+					super().__init__(style=style, label="⏩", row=row)
+				elif custom_id == "down":
+					super().__init__(style=style, label="⏬", row=row)
+				elif custom_id == "flip":
+					super().__init__(style=discord.ButtonStyle.blurple, label="💠", row=row)
+				elif custom_id == "play":
+					super().__init__(style=discord.ButtonStyle.green, label="▶️", row=row)
+				elif custom_id == "quit":
+					super().__init__(style=discord.ButtonStyle.red, label="🛑", row=row)
+				else:
+					super().__init__(style=style, label=label, disabled=True, row=row)
+			
+			async def callback(self, interaction):
+				await interaction.response.defer()
+				view = self.view
+				
+				if interaction.user != view.user:
+					return
+				
+				if self.label == "⏫":
+					view.GOL.field.move_cursor(0, -1)
+				elif self.label == "⏪":
+					view.GOL.field.move_cursor(-1, 0)
+				elif self.label == "⏩":
+					view.GOL.field.move_cursor(1, 0)
+				elif self.label == "⏬":
+					view.GOL.field.move_cursor(0, 1)
+				elif self.label == "💠":
+					view.GOL.field.flip_cell()
+				elif self.label == "▶️":
+					view.GOL.field.update()
+				elif self.label == "🛑":
+					for child in view.children:
+						child.disabled = True
+					await view.stop()
+				else:
+					pass
+				content = view.render()
+				await interaction.edit_original_response(content=content, view=view)
+				
 	class View(discord.ui.View):
 		busy = False
 		player_one = None
