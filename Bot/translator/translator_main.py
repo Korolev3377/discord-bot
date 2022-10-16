@@ -109,11 +109,8 @@ class Translator(app_commands.Translator):
                 "fact_d": {"en": "Let me tell you a fun fact",
                            "ru": "Расскажу вам один забавный факт"},
 
-                "fuck_u": {"en": "All my circuits are burned out. You fucking asshole!",
-                           "ru": "Все мои микросхемы перегорели. Ты чертов мудак!"},
-
-                "on_cd": {"en": "Sorry. I'm overheated! :(",
-                          "ru": "Простите. Я перегрелась! :("},
+                "on_cd": {"en": "Whoa, you're overloading my fragile circuits... Please wait {time_left} seconds before making this request again.",
+                          "ru": "Оу, ты так мне цепи перегрузишь... Подожди, пожалуйста, {time_left} секунд, прежде чем спрашивать меня об этом снова."},
 
                 "input": {"en": "input",
                           "ru": "ввод"},

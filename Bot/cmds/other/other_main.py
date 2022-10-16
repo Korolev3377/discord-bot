@@ -4,6 +4,7 @@ import random
 import collections as coll
 import os
 
+from Bot.misc import Facts
 from discord.app_commands import locale_str as _ls
 from Bot.translator import Translator as T
 
@@ -19,42 +20,10 @@ locale = {"too_many_dices": {"en": "Too many dices. Maximum - 10",
                        "ru": "Простите. У меня пока-что нету фактов! :("}}
 
 _T = T(locale_dict=locale)
-
-FACTS_EN = []
-FACTS_RU = []
-
-async def read_facts(guild):
-    global FACTS_EN, FACTS_RU
-    for channel in guild.channels:
-        if channel.name == "nrc":
-            message = await channel.fetch_message(channel.last_message_id)
-            if message.attachments:
-                for attach in message.attachments:
-                    await attach.save(str.lower(attach.filename))
-                with open('facts_en.txt', 'r', encoding='utf-8') as file:
-                    FACTS_EN = str.split(file.read(), '\n')
-                os.remove('facts_en.txt')
-                with open('facts_ru.txt', 'r', encoding='utf-8') as file:
-                    FACTS_RU = str.split(file.read(), '\n')
-                os.remove('facts_ru.txt')
-            else:
-                await message.add_reaction('⚠️')
-
-
-def find_fact(msg):
-    english = re.findall(r'\bfact(s)?\W*\b', msg)
-    russian = re.findall(r'\bфакт(а|у|ом|е|ы|ов|ам|ами|ах|о)?\W*\b', msg)
-    if english:
-        return 'en'
-    elif russian:
-        return 'ru'
-    else:
-        return False
-
+_F = Facts()
 
 def capitalize_words(string):
     return str.join(' ', [word.capitalize() for word in string.split(' ')])
-
 
 class Other:
     def __init__(self, BOT):
@@ -140,11 +109,8 @@ class Other:
         @BOT.tree.command(name="fact_n", description="fact_d")
         async def cmd(interaction: discord.Interaction):
             await interaction.response.defer()
-            lang = _T.get_lang(interaction.locale.value)
-            await read_facts(interaction.guild)
-            if lang == "en" and len(FACTS_EN) > 0:
-                await interaction.followup.send(random.choice(FACTS_EN))
-            elif lang == "ru" and len(FACTS_RU) > 0:
-                await interaction.followup.send(random.choice(FACTS_RU))
+            if lang := _T.get_lang(interaction.locale.value):
+                if fact := await F.read_facts(guild=interaction.guild, lang=lang):
+                    await interaction.followup.send(fact)
             else:
                 await interaction.followup.send(_T.soft_translate(_ls("no_facts"), locale=interaction.locale))

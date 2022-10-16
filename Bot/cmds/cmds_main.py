@@ -5,6 +5,6 @@ from Bot.cmds.other import Other
 
 def register_all_commands(BOT):
     Help(BOT)
-    Test(BOT)
+    # Test(BOT)
     FunGroup(BOT)
     Other(BOT)

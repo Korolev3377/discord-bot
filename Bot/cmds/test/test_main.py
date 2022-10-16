@@ -99,6 +99,11 @@ class Test:
                 await interaction.channel.send(T.soft_translate(string=_ls("he_dead?"),
                                                                 locale=lang))
 
+        @op_group.command(name="self_say_n", description="self_say_d", extras={"owner_only": True})
+        async def self_destroy_cmd(interaction: discord.Interaction, text: str):
+            await interaction.response.defer(thinking=True, ephemeral=True)
+            await interaction.channel.send(text)
+
         @op_group.command(name="st_n", description="st_d", extras={"owner_only": True})
         async def slap_tangakk_cmd(interaction: discord.Interaction):
             await interaction.response.defer()
