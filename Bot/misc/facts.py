@@ -1,4 +1,5 @@
 import random
+import re
 
 class Facts:
     async def read_facts(self, guild, lang):
@@ -10,10 +11,10 @@ class Facts:
                         for attach in message.attachments:
                             await attach.save(str.lower(attach.filename))
                         if lang == "ru":
-                            with open('facts_en.txt', 'r', encoding='utf-8') as file:
+                            with open('facts_ru.txt', 'r', encoding='utf-8') as file:
                                 return random.choice(str.split(file.read(), '\n'))
                         elif lang == "en":
-                            with open('facts_ru.txt', 'r', encoding='utf-8') as file:
+                            with open('facts_en.txt', 'r', encoding='utf-8') as file:
                                 return random.choice(str.split(file.read(), '\n'))
                     else:
                         await message.add_reaction('⚠️')

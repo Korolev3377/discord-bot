@@ -27,14 +27,6 @@ def capitalize_words(string):
 
 class Other:
     def __init__(self, BOT):
-        @BOT.tree.command(name="facts_count_n", description="facts_count_d", extras={"disabled": True})
-        async def cmd(interaction: discord.Interaction):
-            ...
-
-        @BOT.tree.command(name="nick_blue_n", description="nick_blue_d", extras={"disabled": True})
-        async def cmd(interaction: discord.Interaction):
-            ...
-
         @BOT.tree.command(name="cult_n", description="cult_d")
         async def cmd(interaction: discord.Interaction):
             await interaction.response.defer()
@@ -110,7 +102,7 @@ class Other:
         async def cmd(interaction: discord.Interaction):
             await interaction.response.defer()
             if lang := _T.get_lang(interaction.locale.value):
-                if fact := await F.read_facts(guild=interaction.guild, lang=lang):
+                if fact := await _F.read_facts(guild=interaction.guild, lang=lang):
                     await interaction.followup.send(fact)
             else:
                 await interaction.followup.send(_T.soft_translate(_ls("no_facts"), locale=interaction.locale))

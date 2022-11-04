@@ -109,8 +109,33 @@ class Translator(app_commands.Translator):
                 "fact_d": {"en": "Let me tell you a fun fact",
                            "ru": "Расскажу вам один забавный факт"},
 
-                "on_cd": {"en": "Whoa, you're overloading my fragile circuits... Please wait {time_left} seconds before making this request again.",
-                          "ru": "Оу, ты так мне цепи перегрузишь... Подожди, пожалуйста, {time_left} секунд, прежде чем спрашивать меня об этом снова."},
+                "on_cd": {
+                    "en": "Whoa, you're overloading my fragile circuits... Please wait {time_left} seconds before making this request again.",
+                    "ru": "Оу, ты так мне цепи перегрузишь... Подожди, пожалуйста, {time_left} секунд, прежде чем спрашивать меня об этом снова."},
+
+                "nb_n": {"en": "nickblue",
+                         "ru": "синий-ник"},
+
+                "nb_d": {"en": "Nickblue raffle",
+                         "ru": "Рулетка в честь Синего ника"},
+
+                "join_nb_n": {"en": "join",
+                              "ru": "присоединиться"},
+
+                "join_nb_d": {"en": "Join nickblue raffle",
+                              "ru": "Приcоединиться к рулетке Nick_blue"},
+
+                "left_nb_n": {"en": "exit",
+                              "ru": "выйти"},
+
+                "left_nb_d": {"en": "Exit from nickblue raffle",
+                              "ru": "Выйти из рулетки Nick_blue"},
+
+                "show_nb_n": {"en": "status",
+                              "ru": "статус"},
+
+                "show_nb_d": {"en": "Who is Nickblue and candidates",
+                              "ru": "Кто Nick_blue и кандидаты"},
 
                 "input": {"en": "input",
                           "ru": "ввод"},

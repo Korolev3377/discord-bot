@@ -9,16 +9,17 @@ import random
 from Bot.misc import Env, Config, Facts
 from Bot.cmds import register_all_commands
 from Bot.translator import Translator
-from Bot.heart import Heart
+from Bot.heart import Heart, Nickblue
 
 def start_bot():
     class Bot(commands.Bot):
         def __init__(self):
-            print('\nВход по токену бота')
+            print('\nВход по токену бота!')
             super().__init__(command_prefix=Config.CMD_PREFIX,
                              help_command=None,
                              strip_after_prefix=True,
                              intents=Config.INTENTS)
+            self.nickblue = Nickblue(self, 851871106373255168, 920357026209595392, 996418372071862372, 996418316006588516)
             self.overload = 0.0  # Это ограничитель спама комманд. ака КД
             self.heart = Heart(self)  # Это главный цикл бота. В нем идет пассивное уменьшение КД и проверка на то, когда нужно будет менять Синего ника.
 
@@ -26,7 +27,7 @@ def start_bot():
             self.tree.interaction_check = itr_check
             await self.tree.set_translator(Translator())  # Установка переводчика описания и названия комманд для клиента
             await self.tree.sync()  # Синхронизация. Для обновления изменения комманд
-            print('\nСоединение с сервером')
+            print('\nСоединение с сервером!')
 
     BOT = Bot()
     F = Facts()
@@ -54,7 +55,7 @@ def start_bot():
     @BOT.event
     async def on_ready():
         print('\nЗапуск бота...')
-        print('Бот запущен')
+        print('Бот запущен!')
         print(f"Имя: {BOT.user}\nИД: {BOT.user.id}")
         if translate_not_found := BOT.tree.translator.translate_not_found:
             print(f"\nПеревод не найден: {translate_not_found}")
