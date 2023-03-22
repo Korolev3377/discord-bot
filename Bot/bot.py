@@ -68,17 +68,17 @@ def start_bot():
             return
 
         msg = message.content.lower()
-        bot_mention = re.findall(r"(\b8915-7\b|\b872406824765251594\b|\bбарменбот(а|у|ом|е|ы|ов|ам|ами|ах|о)?\b|\bбармен(а|у|ом|е|ы|ов|ам|ами|ах|о)?\b|\bфактобот(а|у|ом|е|ы|ов|ам|ами|ах|о)?\b|\bббот\b|\bbbot\b|\bbarmen\b|\bbartender\b|\bbartenderbot\b|)", msg)
-
+        
         if lang := F.find_fact(msg=msg):
             if fact := await F.read_facts(guild=message.guild, lang=lang):
                 await message.channel.send(fact)
-
-        elif bot_mention:
-            try:
-                await message.add_reaction(':89157:873334902005833778')
-            except:
-                await message.add_reaction(':af_pepe_tea:1005139436134223882')
+        
+        bot_mention = re.search(r"(\b8915-7\b|\b872406824765251594\b|\bбарменбот(а|у|ом|е|ы|ов|ам|ами|ах|о)?\b|\bбармен(а|у|ом|е|ы|ов|ам|ами|ах|о)?\b|\bфактобот(а|у|ом|е|ы|ов|ам|ами|ах|о)?\b|\bббот\b|\bbbot\b|\bbarmen\b|\bbartender\b|\bbartenderbot\b)", msg)
+        if bot_mention:
+                try:
+                        await message.add_reaction(':89157:873334902005833778')
+                except:
+                        await message.add_reaction(':af_pepe_tea:1005139436134223882')
 
     """@BOT.event
     async def on_member_join(member: discord.Member):

@@ -157,7 +157,7 @@ class GameOfLifeView(discord.ui.View):
                 super().__init__(style=discord.ButtonStyle.green, label=_T.soft_translate(_ls("start"), locale=lang), row=row,
                                  custom_id=button_type)
             else:
-                super().__init__(label=" ", disabled=True, row=row)
+                super().__init__(label="_", disabled=True, row=row)
 
         async def callback(self, interaction):
             await interaction.response.defer()

@@ -98,7 +98,7 @@ class TicTacToeView(discord.ui.View):
 
     class TicTacToeButton(discord.ui.Button):
         def __init__(self, x: int, y: int):
-            super().__init__(label=' ', row=y)
+            super().__init__(label='_', row=y)
             self.x = x
             self.y = y
 

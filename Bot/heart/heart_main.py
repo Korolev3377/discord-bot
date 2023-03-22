@@ -22,9 +22,5 @@ class Heart:
 
     @heartbeat.before_loop
     async def before_loop(self):
-        print('Добавление Nickblue цикла...')
-        await self.BOT.nickblue.init()
-        await self.BOT.nickblue.roll()
-        print('Nickblue цикл добавлен!')
         print('Сердце запущено!')
         print('\nКонец инициализации!')
