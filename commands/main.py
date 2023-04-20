@@ -1,16 +1,6 @@
-from .example.main import examplegrp
-
-
-# from .test.main import test_grp
-# from .enjoy.main import enjoy_grp
+from .other.main import facts, cults, rolldice
 
 
 def declare_cmds(bot):
-    bot.tree.add_command(examplegrp)
-    # bot.tree.add_command(enjoy_grp)
-
-    # Help(BOT)
-    # Test(BOT)
-    # FunGroup(BOT)
-    # Other(BOT)
-    # Nickblue_cmds(BOT)
+    for i in [facts, cults, rolldice]:
+        bot.tree.add_command(i)

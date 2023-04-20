@@ -6,68 +6,48 @@ from discord.app_commands import locale_str as _ls
 from translator.main import T
 from environment.variable import *
 
+EXAMPLE_CMD_ANSWER = "examplecmd_answer"
+FORMAT_STRING = "format_string"
+EXAMPLE_CMD_NAME = "examplecmd_name"
+EXAMPLE_CMD_DESC = "examplecmd_desc"
+EXAMPLE_GRP_NAME = "examplegrp_name"
+EXAMPLE_GRP_DESC = "examplegrp_desc"
+
 _locale = {
-    "bonk_usr": {
-        EN: "{_} horny!",
-        RU: "{_} хорни!"
-    },
-    "bonk_name": {
-        EN: "tangakk-horny",
-        RU: "тангакк-хорни"
-    },
-    "bonk_desc": {
-        EN: "command-description",
-        RU: "описание-комманды"
-    },
-    'examplegrp_name': {
-        EN: 'group-name',
-        RU: 'название-группы'
-    },
-    'examplegrp_desc': {
-        EN: 'group-description',
-        RU: 'описание-группы'
-    }
+    EXAMPLE_CMD_ANSWER: {EN: "command_answer {_}",
+                         RU: "ответ-комманды {_}"},
+    FORMAT_STRING: {EN: "format-string",
+                    RU: "отформатированная-строка"},
+    EXAMPLE_CMD_NAME: {EN: "command-name",
+                       RU: "название-комманды"},
+    EXAMPLE_CMD_DESC: {EN: "command-description",
+                       RU: "описание-комманды"},
+    EXAMPLE_GRP_NAME: {EN: "group-name",
+                       RU: "название-группы"},
+    EXAMPLE_GRP_DESC: {EN: "group-description",
+                       RU: "описание-группы"}
 }
 
 _T = T(locale_dict=_locale)
 
-
-examplegrp = app_commands.Group(
-    name=_ls(
-        'examplegrp_name',
-        extras={
-            DICT: _locale.get('examplegrp_name'),
-            TYPE: CMD
-        }
-    ),
-    description=_ls(
-        'examplegrp_desc',
-        extras={
-            DICT: _locale.get('examplegrp_desc'),
-            TYPE: CMD
-        }
-    )
-)
+examplegrp = create_group(EXAMPLE_GRP_NAME, EXAMPLE_GRP_DESC, _locale)
 
 
 @examplegrp.command(
-    name=_ls(
-        'bonk_name',
-        extras={
-            DICT: _locale.get('bonk_name'),
-            TYPE: CMD
-        }
-    ),
-    description=_ls(
-        'bonk_desc',
-        extras={
-            DICT: _locale.get('bonk_desc'),
-            TYPE: CMD
-        }
-    )
+    name=namedesc(EXAMPLE_CMD_NAME, _locale),
+    description=namedesc(EXAMPLE_CMD_DESC, _locale)
 )
-async def bonk(interaction: discord.Interaction):
+async def examplecmd(interaction: discord.Interaction):
     await interaction.response.defer(thinking=True)
     _T.set_locale(locale=interaction.locale)
-    _T.set_string(string=_ls("bonk_usr", extras={FORMAT: {'_': 'Tangakk'}}))
+    _T.set_string(
+        string=_ls(
+            EXAMPLE_CMD_ANSWER,
+            extras={
+                FORMAT: {
+                    "_": _T.stranslate(st=_ls(FORMAT_STRING))
+                }
+            }
+        )
+    )
     await interaction.followup.send(_T.stranslate())
