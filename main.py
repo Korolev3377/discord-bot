@@ -113,7 +113,8 @@ if __name__ == '__main__':
         print(f"Имя: {BOT.user}\nИД: {BOT.user.id}")
         if translate_not_found := BOT.tree.translator.translate_not_found:
             print(f"\nПеревод не найден для: {translate_not_found}")
-        await BOT.heart.beat.start()
+        if not BOT.heart.beat.is_running():
+            await BOT.heart.beat.start()
 
 
     @BOT.event
