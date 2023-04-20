@@ -6,6 +6,7 @@ from discord.app_commands import locale_str as _ls
 from translator.main import T
 from environment.variable import *
 
+_ = "..."
 EXAMPLE_CMD_ANSWER = "examplecmd_answer"
 FORMAT_STRING = "format_string"
 EXAMPLE_CMD_NAME = "examplecmd_name"
@@ -14,6 +15,9 @@ EXAMPLE_GRP_NAME = "examplegrp_name"
 EXAMPLE_GRP_DESC = "examplegrp_desc"
 
 _locale = {
+    _: {EN: "",
+        RU: ""},
+
     EXAMPLE_CMD_ANSWER: {EN: "command_answer {_}",
                          RU: "ответ-комманды {_}"},
     FORMAT_STRING: {EN: "format-string",

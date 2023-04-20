@@ -10,6 +10,7 @@ EXTRAS = "extras"
 TYPE = "type"
 CMD = "cmd"
 DICT = "dict"
+USAGE = "usage"
 
 EN = "en"
 RU = "ru"
