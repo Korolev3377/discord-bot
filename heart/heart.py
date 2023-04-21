@@ -32,7 +32,6 @@ class Heart:
             if _user.get('overload') == 0:
                 self.bot.antispam.pop(_id)
         self.cycle += cooling_rate/1000
-        self.cycle = round(self.cycle, 3)
         if self.cycle >= self.end_cycle:
             self.end_cycle += self.step_cycle
             print('\nЦикл:', round(self.cycle), '-', time.ctime(time.time()))
