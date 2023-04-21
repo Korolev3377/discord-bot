@@ -6,7 +6,7 @@ from discord.app_commands import locale_str as _ls
 from translator.main import T
 from environment.variable import *
 
-_ = "..."
+_ = ""
 EXAMPLE_CMD_ANSWER = "examplecmd_answer"
 FORMAT_STRING = "format_string"
 EXAMPLE_CMD_NAME = "examplecmd_name"
