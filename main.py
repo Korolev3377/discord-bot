@@ -116,6 +116,13 @@ if __name__ == '__main__':
         if not BOT.heart.beat.is_running():
             await BOT.heart.beat.start()
 
+    @BOT.event
+    async def on_disconnect():
+        print("Потеря связи с Дискордом!")
+        print(BOT, BOT.heart, BOT.heart.beat)
+        if BOT.heart.beat.is_running():
+            await BOT.heart.beat.cancel()
+
 
     @BOT.event
     async def on_message(message):

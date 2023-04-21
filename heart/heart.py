@@ -8,6 +8,8 @@ cooling_rate = 1/1.2
 
 class Heart:
     cycle = 0
+    step_cycle = 1
+    end_cycle = 0
 
     def __init__(self, bot):
         self.bot = bot
@@ -29,7 +31,11 @@ class Heart:
                 _user['overloaded'] = True
             if _user.get('overload') == 0:
                 self.bot.antispam.pop(_id)
-        self.cycle += cooling_rate/100
+        self.cycle += cooling_rate/1000
+        self.cycle = round(self.cycle, 3)
+        if self.cycle >= self.end_cycle:
+            self.end_cycle += self.step_cycle
+            print('\nЦикл:', round(self.cycle), '-', time.ctime(time.time()))
 
     @beat.before_loop
     async def before_loop(self):
