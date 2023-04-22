@@ -1,7 +1,10 @@
 from .regular.main import facts, cults, rolldice
 from .enjoy.main import enjoy_grp
 
+commands_to_declare = [facts, cults, rolldice, enjoy_grp]
+# commands_to_declare = [cults]
+
 
 def declare_cmds(bot):
-    for i in [facts, cults, rolldice, enjoy_grp]:
+    for i in commands_to_declare:
         bot.tree.add_command(i)
