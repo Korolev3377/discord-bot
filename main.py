@@ -3,7 +3,7 @@ from discord.ext import commands
 from discord.app_commands import locale_str as _ls
 
 from commands.main import declare_cmds
-from environment.main import Env, Cfg, Facts
+from environment.main import TOKEN, Cfg, Facts
 from environment.variable import *
 from heart.heart import Heart
 from translator.main import T
@@ -101,7 +101,7 @@ if __name__ == '__main__':
                 USER_LOAD: 0,
                 IS_USER_OVERLOADED: False
             }
-        BOT.antispam[_user][USER_LOAD] += BOT.antispam[_user][USER_LOAD] + 20
+        BOT.antispam[_user][USER_LOAD] += BOT.antispam[_user][USER_LOAD] + 15
         if BOT.antispam.get(_user).get(USER_LOAD) > 100.0:
             BOT.antispam[_user][IS_USER_OVERLOADED] = True
         return True
@@ -119,9 +119,6 @@ if __name__ == '__main__':
     @BOT.event
     async def on_disconnect():
         print("Потеря связи с Дискордом!")
-        print(BOT, BOT.heart, BOT.heart.beat)
-        if BOT.heart.beat.is_running():
-            await BOT.heart.beat.cancel()
 
 
     @BOT.event
@@ -157,6 +154,5 @@ if __name__ == '__main__':
     async def on_member_remove(member: discord.Member):
         await member.guild.system_channel.send("{user} left this Guild".format(user=member.mention))
 
-
     declare_cmds(BOT)
-    BOT.run(Env.TOKEN)
+    BOT.run(TOKEN)
