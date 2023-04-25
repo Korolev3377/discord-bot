@@ -17,7 +17,7 @@ class Heart:
     def time_to_cooldown(self, overload):
         return (overload / cooling_rate) * loop_seconds
 
-    @tasks.loop(seconds=loop_seconds)
+    @tasks.loop(seconds=loop_seconds, reconnect=False)
     async def beat(self):
         """if self.BOT.nickblue.enable:
             if time.time() > self.BOT.nickblue.time_left:  # Идемя Врет
@@ -38,4 +38,8 @@ class Heart:
 
     @beat.before_loop
     async def before_loop(self):
-        print('\nКонец инициализации!')
+        print('\nСердце запущено!')
+
+    @beat.after_loop
+    async def after_loop(self):
+        print("Сердце остановлено!")
