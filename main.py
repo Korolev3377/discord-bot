@@ -1,3 +1,4 @@
+import time
 import discord
 from discord.ext import commands
 from discord.app_commands import locale_str as _ls
@@ -18,6 +19,7 @@ if __name__ == '__main__':
             self.antispam = {}  # Это ограничитель спама комманд для каждого пользователя.
             # Срабатывает при превышении лимита и отключается при понижении до 0.
             self.heart = Heart(self)
+            self.heartbeat = None
             # Это главный цикл бота. В нем идет пассивное уменьшение КД и проверка на то,
             # когда нужно будет менять Синего ника.
 
@@ -109,17 +111,21 @@ if __name__ == '__main__':
 
     @BOT.event
     async def on_ready():
-        print('Бот запущен!\n')
-        print(f"Имя: {BOT.user}\nИД: {BOT.user.id}")
+        print('\nБот запущен!')
+        print(f"\nИмя: {BOT.user}\nИД: {BOT.user.id}")
         if translate_not_found := BOT.tree.translator.translate_not_found:
             print(f"\nПеревод не найден для: {translate_not_found}")
-        if not BOT.heart.beat.is_running():
-            await BOT.heart.beat.start()
+        if not BOT.heartbeat:
+            BOT.heartbeat = await BOT.heart.beat.start()
+
+    @BOT.event
+    async def on_connect():
+        print("\nСоединение с Дискордом установлено!")
 
     @BOT.event
     async def on_disconnect():
-        print("Потеря связи с Дискордом!")
-
+        print("\nПотеря связи с Дискордом!")
+        print('Цикл:', round(BOT.heart.cycle, 3), '-', time.ctime(time.time()))
 
     @BOT.event
     async def on_message(message):
