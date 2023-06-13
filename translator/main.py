@@ -115,9 +115,9 @@ class T(app_commands.Translator):
                            "ru": "Расскажу вам один забавный факт"},
 
                 "on_cd": {
-                    "en": "Whoa, you're overloading my fragile circuits... Please wait {time_left} seconds before "
+                    "en": "Whoa, you're overloading my fragile circuits... Please wait {_} seconds before "
                           "making this request again.",
-                    "ru": "Оу, ты так мне цепи перегрузишь... Подожди, пожалуйста, {time_left} секунд, прежде чем "
+                    "ru": "Оу, ты так мне цепи перегрузишь... Подожди, пожалуйста, {_} секунд, прежде чем "
                           "спрашивать меня об этом снова."},
 
                 "nb_n": {"en": "nickblue",

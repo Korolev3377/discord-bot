@@ -1,3 +1,5 @@
+import asyncio
+
 from discord import app_commands
 from discord.app_commands import locale_str as _ls
 
@@ -20,6 +22,9 @@ IS_DISABLED = "disabled"
 IS_BROKEN = "broken"
 IS_ADMIN_ONLY = "admin_only"
 IS_OWNER_ONLY = "owner_only"
+
+# Замочег для базы данных.
+LOCK = asyncio.Lock()
 
 
 def create_group(group_name, group_desc, locale_dict):

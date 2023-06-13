@@ -1,3 +1,4 @@
+import asyncio
 import time
 import discord
 from discord.ext import commands
@@ -18,10 +19,10 @@ if __name__ == '__main__':
                              intents=Cfg.INTENTS)
             self.antispam = {}  # Это ограничитель спама комманд для каждого пользователя.
             # Срабатывает при превышении лимита и отключается при понижении до 0.
+
             self.heart = Heart(self)
-            self.heartbeat = None
             # Это главный цикл бота. В нем идет пассивное уменьшение КД и проверка на то,
-            # когда нужно будет менять Синего ника.
+            # когда нужно будет менять Синего ника. Если вообще нужно будет.
 
         async def setup_hook(self):
             self.tree.interaction_check = itr_check
@@ -115,8 +116,8 @@ if __name__ == '__main__':
         print(f"\nИмя: {BOT.user}\nИД: {BOT.user.id}")
         if translate_not_found := BOT.tree.translator.translate_not_found:
             print(f"\nПеревод не найден для: {translate_not_found}")
-        if not BOT.heartbeat:
-            BOT.heartbeat = await BOT.heart.beat.start()
+        if not BOT.heart.beat.is_running():
+            await BOT.heart.beat.start()
 
     @BOT.event
     async def on_connect():
