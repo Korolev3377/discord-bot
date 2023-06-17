@@ -1,5 +1,6 @@
 import asyncio
 
+import discord.ui
 from discord import app_commands
 from discord.app_commands import locale_str as _ls
 
@@ -65,3 +66,9 @@ def namedesc(name_desc, locale_dict):
             TYPE: CMD
         }
     )
+
+
+class ConfirmButton(discord.ui.Button):
+    def __init__(self):
+        super().__init__()
+        ...

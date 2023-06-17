@@ -1,15 +1,28 @@
 import sqlite3 as sql
 from environment.variable import *
 
+from discord import SelectOption
+
 
 class DataBase:
     def __init__(self):
         self.db_connection = None
         self.db_cursor = None
+        self.users = None
+        self.connect()
+        self.disconnect()
 
     def connect(self):
         self.db_connection = sql.connect("database.db")
         self.db_cursor = self.db_connection.cursor()
+        self.db_cursor.execute(f"""
+                        SELECT {NAME}, {ID}
+                        FROM {USERS};""")
+        i = self.db_cursor.fetchall()
+        if i:
+            self.users = [SelectOption(label=i[0], value=i[1]) in i]
+        else:
+            self.users = None
 
     def disconnect(self):
         self.db_connection.commit()
@@ -23,6 +36,10 @@ class DataBase:
         i = self.db_cursor.fetchone()
         if i:
             data = {ID: i[0], NAME: i[1], WEALTH: i[2], SCORE: i[3], LANGUAGE: i[4]}
+            self.db_cursor.execute(f"""
+            UPDATE {USERS} SET
+            name = "{user_name}"
+            WHERE id = {data.get(ID)};""")
             return data.get(WEALTH)
         else:
             self.db_cursor.execute(f"""
@@ -30,7 +47,7 @@ class DataBase:
             VALUES ({user_id}, "{user_name}", 0, 0, "{user_language}");""")
             return "usercreated"
 
-    def ch_user_money(self, users: list, mode: str, value: int):
+    def ch_user_money(self, users: list, mode: str, value: int, new_name: str = None):
         if mode == ADD:
             self.db_cursor.execute(f"""
             SELECT {ID}, {NAME}, {WEALTH}, {SCORE}, {LANGUAGE}
@@ -47,22 +64,22 @@ class DataBase:
             else:
                 return "nouser", None
 
-        elif mode == "set":
+        elif mode == SET:
             self.db_cursor.execute(f"""
-                                    SELECT id,
-                                    name,
-                                    wealth,
-                                    score,
-                                    language
-                                    FROM users
-                                    WHERE id = {users[0]};""")
+            SELECT id,
+            name,
+            wealth,
+            score,
+            language
+            FROM users
+            WHERE id = {users[0]};""")
             i = self.db_cursor.fetchone()
             if i:
                 data = {"id": i[0], "name": i[1], "wealth": value, "score": i[3], "language": i[4]}
                 self.db_cursor.execute(f"""
-                                UPDATE users SET
-                                wealth = {data.get("wealth")}
-                                WHERE id = {data.get("id")};""")
+                UPDATE users SET
+                wealth = {data.get("wealth")}
+                WHERE id = {data.get("id")};""")
                 return "changed", None
             else:
                 return "nouser", None
