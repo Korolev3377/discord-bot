@@ -4,11 +4,23 @@ import asyncio
 
 from discord import app_commands
 from discord.app_commands import locale_str as _ls
+from discord.app_commands import Choice
 from .dbcontrol import DB
 
 from translator.main import T
 from environment.variable import *
 
+USER_2 = "user2"
+TARGET = "target"
+VALUE = "value"
+TRANSFER_ERROR = "tansfererror"
+INT_ERROR = "interror"
+VALUE_ERROR = "valueerror"
+NOT_ENOUGH_MONEY = "notenoughmoney"
+USER2_NOT_IN_DB = "nouser2"
+USER1_NOT_IN_DB = "nouser1"
+TRANSFFERED = "tansfered"
+USER_CREATED = "usercreated"
 _ = ""
 GETBALANCE = "getbalance"
 WEALTH_GRP_NAME = "wgrpn"
@@ -30,12 +42,33 @@ _locale = {
                     RU: "Дать шекелей другому пользователю."},
     WEALTH_GRP_NAME: {EN: "wallet",
                       RU: "кошелек"},
-    WEALTH_GRP_DESC: {EN: "You control your money",
-                      RU: "Ты контролируешь свои деньги"},
+    WEALTH_GRP_DESC: {EN: "You control your money.",
+                      RU: "Ты контролируешь свои деньги."},
     BALANCE_NAME: {EN: "balance",
                    RU: "баланс"},
-    BALANCE_DESC: {EN: "Get info about your savings",
-                   RU: "Смотреть на сколько у вас не хватает денег"}
+    BALANCE_DESC: {EN: "Get info about your savings.",
+                   RU: "Смотреть на сколько у вас не хватает денег."},
+    USER_CREATED: {
+        EN: "You don't seem to be in my database. I will add you to it. Now you can check your balance, tranfer lots and accept the transfer.",
+        RU: "Похоже, вас нету в моей базе данныз. Я добавлю вас в нее. Теперь вы можете проверять свой баланс, отправлять и принимать лоты."},
+    TRANSFFERED: {EN: "You transferred {wealth} lots to a user \"{user2}\"",
+                  RU: "Вы перевели пользователю \"{user2}\" {wealth} лот."},
+    USER1_NOT_IN_DB: {EN: "Ouh nyo! You not in by database. Please execute \"/wallet balance\" command to fix it.",
+                      RU: "Оу нет! Вас нету в моей базе данных. Выполните комманду \"/кошелек баланс\" что бы пофиксить это."},
+    USER2_NOT_IN_DB: {EN: "Ouh nyo! You are trying to trasfer lots tp someone who is not in my database",
+                      RU: "Оу нет! Вы пытаетесь перевести лоты пользователю, которого нету в моей базе данных."},
+    NOT_ENOUGH_MONEY: {EN: "You are trying to transfer {value} lots, but you only have {wealth} lots.",
+                       RU: "Вы пытаетесь прыгнуть выше головы! Вы пытаетесь перевести {value} лот, когда у вас всего {wealth} лот."},
+    VALUE_ERROR: {EN: "An error in the value of the trasfer amouth.",
+                  RU: "Ошибка в значении суммы перевода."},
+    INT_ERROR: {EN: "An error in the value of the target user.",
+                RU: "Ошибка в значении цели перевода."},
+    TRANSFER_ERROR: {EN: "Korolev nakodil govna.",
+                     RU: "Korolev накодил говна."},
+    VALUE: {EN: "amouth",
+            RU: "сколько"},
+    TARGET: {EN: "target",
+             RU: "кому"}
 }
 
 _T = T(locale_dict=_locale)
@@ -54,12 +87,13 @@ async def balancecmd(interaction: discord.Interaction):
         await asyncio.sleep(1)
     async with LOCK:
         DB.connect()
-        data = DB.get_user_info(user_id=interaction.user.id, user_name=interaction.user.name, user_language=interaction.locale)
+        data = DB.get_user_info(user_id=interaction.user.id, user_name=interaction.user.name,
+                                user_language=interaction.locale)
         DB.disconnect()
-        if data == "usercreated":
+        if data == USER_CREATED:
             _T.set_string(
                 string=_ls(
-                    "usercreated"
+                    USER_CREATED
                 )
             )
         else:
@@ -76,65 +110,117 @@ async def balancecmd(interaction: discord.Interaction):
         await interaction.followup.send(_T.stranslate())
 
 
+class TransferView(discord.ui.View):
+    def __init__(self, author, gol, size, binary=False):
+        super().__init__()
+        self.add_item(discord.ui.TextInput(label="Введите сумму", placeholder="Число от 1 до 1000"))
+        self.add_item(discord.ui.Select(placeholder="Кому перевести", options=DB.users))
+        self.add_item(discord.ui.Button(label="Перевести"))
+        self.add_item(discord.ui.Button(label="Отмена", style=discord.ButtonStyle.red))
+
+"""
+@app_commands.rename(value=namedesc(VALUE, _locale))
+@app_commands.rename(target_userid=namedesc(TARGET, _locale))
+@app_commands.choices(target_userid=DB.users)
+"""
+
+
 @wealthgrp.command(
     name=namedesc(TRANSFER_NAME, _locale),
     description=namedesc(TRANSFER_DESC, _locale)
 )
-async def trasfercmd(interaction: discord.Interaction,  value: int, target_userid: str):
+async def trasfercmd(interaction: discord.Interaction):
     await interaction.response.defer(thinking=True)
     _T.set_locale(locale=interaction.locale)
+    view = TransferView()
     while LOCK.locked():
         await asyncio.sleep(1)
     async with LOCK:
+        try:
+            target_userid = int(target_userid.value)
+        except:
+            _T.set_string(
+                string=_ls(
+                    INT_ERROR
+                )
+            )
+            await interaction.followup.send(_T.stranslate())
+            return
         DB.connect()
         status, data1, data2 = DB.ch_user_money(users=[interaction.user.id, target_userid], mode=TRANSFER, value=value)
         DB.disconnect()
-        if status == "tansfered" and data1 and data2:
+        if status == TRANSFFERED and data1 and data2:
             _T.set_string(
                 string=_ls(
-                    "tansfered",
+                    TRANSFFERED,
                     extras={
                         FORMAT: {
-                            "wealth": data1.get(WEALTH),
-                            "user2": data2.get(NAME)
+                            WEALTH: value,
+                            USER_2: data2.get(NAME)
                         }
                     }
                 )
             )
-        elif status == "nouser1":
+        elif status == USER1_NOT_IN_DB:
             _T.set_string(
                 string=_ls(
-                    "nouser1"
+                    USER1_NOT_IN_DB
                 )
             )
-        elif status == "nouser2":
+        elif status == USER2_NOT_IN_DB:
             _T.set_string(
                 string=_ls(
-                    "nouser2"
+                    USER2_NOT_IN_DB
                 )
             )
-        elif status == "notenoughmoney":
+        elif status == NOT_ENOUGH_MONEY:
             _T.set_string(
                 string=_ls(
-                    "notenoughmoney",
+                    NOT_ENOUGH_MONEY,
                     extras={
                         FORMAT: {
-                            "wealth": data1.get(WEALTH),
-                            "value": value
+                            WEALTH: data1.get(WEALTH),
+                            VALUE: value
                         }
                     }
                 )
             )
-        elif status == "valueerror":
+        elif status == VALUE_ERROR:
             _T.set_string(
                 string=_ls(
-                    "valueerror"
+                    VALUE_ERROR
                 )
             )
         else:
             _T.set_string(
                 string=_ls(
-                    "tansfererror"
+                    TRANSFER_ERROR
                 )
             )
+        await interaction.followup.send(_T.stranslate())
+
+
+@wealthgrp.command(
+    name="testln",
+    description="testld"
+)
+@app_commands.rename(arg="аргумет")
+@app_commands.choices(arg=DB.users)
+async def forcetfrcmd(interaction: discord.Interaction, arg: Choice[str]):
+    """Test command
+    :param interaction:
+    Interaction param
+    :param arg:
+    Test Argument
+    """
+    await interaction.response.defer(thinking=True)
+    _T.set_locale(locale=interaction.locale)
+    while LOCK.locked():
+        await asyncio.sleep(1)
+    async with LOCK:
+        _T.set_string(
+            string=_ls(
+                arg.value
+            )
+        )
         await interaction.followup.send(_T.stranslate())
