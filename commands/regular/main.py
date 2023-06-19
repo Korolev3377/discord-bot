@@ -8,6 +8,9 @@ from discord import app_commands
 from translator.main import T
 from discord.app_commands import locale_str as _ls
 from environment.variable import *
+from environment.facts import Facts
+
+_F = Facts()
 
 
 def capitalize_words(string):
@@ -34,8 +37,8 @@ _locale = {
                 RU: "забавный-факт"},
     FACT_DESC: {EN: "Let me gave u funny fackt.",
                 RU: "Дай мне дать тебе забавный факт."},
-    NO_FACTS: {EN: "Top {_} cults",
-               RU: "Топ {_} культов"},
+    NO_FACTS: {EN: "Sorry, no facts on this server",
+               RU: "Сорри, нету фактов на этом сервере."},
 
     CULTS_NAME: {EN: "top-cults",
                  RU: "топ-культов"},
@@ -67,12 +70,12 @@ _T = T(locale_dict=_locale)
 @app_commands.command(
     name=namedesc(FACT_NAME, _locale),
     description=namedesc(FACT_DESC, _locale),
-    extras={IS_BROKEN: True}
+    extras={IS_BROKEN: False}
 )
 async def facts(interaction: discord.Interaction):
     await interaction.response.defer()
     _T.set_locale(interaction.locale)
-    if fact := await _F.read_facts(guild=interaction.guild, lang=lang):
+    if fact := await _F.read_facts(guild=interaction.guild, lang=_T.get_lang(interaction.locale.value)):
         await interaction.followup.send(fact)
     else:
         await interaction.followup.send(_T.stranslate(_ls(NO_FACTS)))
