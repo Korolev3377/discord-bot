@@ -42,7 +42,7 @@ if __name__ == '__main__':
         _user = interaction.user.id
 
         # Системные комманды могут вызываться без последствий
-        if interaction.command.extras.get(IS_SYSTEM):
+        if interaction.command.extras.get(IS_SYSTEM) or interaction.type == discord.InteractionType.autocomplete:
             if BOT.antispam.get(_user):
                 if BOT.antispam.get(_user).get(USER_LOAD) > 100.0:
                     BOT.antispam[_user][IS_USER_OVERLOADED] = True

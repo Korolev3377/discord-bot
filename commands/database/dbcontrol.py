@@ -16,8 +16,9 @@ class DataBase:
         self.db_connection = sql.connect("database.db")
         self.db_cursor = self.db_connection.cursor()
         self.db_cursor.execute(f"""
-                        SELECT {NAME}, {ID}
-                        FROM {USERS};""")
+        SELECT {NAME}, {ID}
+        FROM {USERS}
+        WHERE is_visible = 1;""")
         i = self.db_cursor.fetchall()
         dat = []
         if i:
@@ -30,14 +31,6 @@ class DataBase:
     def disconnect(self):
         self.db_connection.commit()
         self.db_connection.close()
-
-    async def reload(self, bot):
-        self.connect()
-        self.disconnect()
-        bot.tree.clear_commands(guild=None)
-        await bot.tree.sync()
-        bot.Declare_Cmds(bot)
-        await bot.tree.sync()
 
     def get_user_info(self, user_id: int, user_name: str, user_language: str):
         self.db_cursor.execute(f"""

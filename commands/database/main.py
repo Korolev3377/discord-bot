@@ -50,7 +50,7 @@ _locale = {
                    RU: "Смотреть на сколько у вас не хватает денег."},
     USER_CREATED: {
         EN: "You don't seem to be in my database. I will add you to it. Now you can check your balance, tranfer lots and accept the transfer.",
-        RU: "Похоже, вас нету в моей базе данныз. Я добавлю вас в нее. Теперь вы можете проверять свой баланс, отправлять и принимать лоты."},
+        RU: "Похоже, вас нету в моей базе данных. Я добавлю вас в нее. Теперь вы можете проверять свой баланс, отправлять и принимать лоты."},
     TRANSFFERED: {EN: "You transferred {wealth} lots to a user \"{user2}\"",
                   RU: "Вы перевели пользователю \"{user2}\" {wealth} лот."},
     USER1_NOT_IN_DB: {EN: "Ouh nyo! You not in by database. Please execute \"/wallet balance\" command to fix it.",
@@ -58,7 +58,7 @@ _locale = {
     USER2_NOT_IN_DB: {EN: "Ouh nyo! You are trying to trasfer lots tp someone who is not in my database",
                       RU: "Оу нет! Вы пытаетесь перевести лоты пользователю, которого нету в моей базе данных."},
     NOT_ENOUGH_MONEY: {EN: "You are trying to transfer {value} lots, but you only have {wealth} lots.",
-                       RU: "Вы пытаетесь прыгнуть выше головы! Вы пытаетесь перевести {value} лот, когда у вас всего {wealth} лот."},
+                       RU: "Вы пытаетесь прыгнуть выше головы! Невозможно перевести {value} лот, когда у вас всего {wealth} лот."},
     VALUE_ERROR: {EN: "An error in the value of the trasfer amouth.",
                   RU: "Ошибка в значении суммы перевода."},
     INT_ERROR: {EN: "An error in the value of the target user.",
@@ -107,7 +107,6 @@ async def balancecmd(interaction: discord.Interaction):
                     }
                 )
             )
-        await DB.reload(interaction.client)
         await interaction.followup.send(_T.stranslate())
 
 
@@ -116,15 +115,14 @@ async def balancecmd(interaction: discord.Interaction):
     description=namedesc(TRANSFER_DESC, _locale)
 )
 @app_commands.rename(target_user="кому", value="сколько")
-@app_commands.choices(target_user=DB.users)
-async def trasfercmd(interaction: discord.Interaction, target_user: Choice[str], value: app_commands.Range[int, 1, 1000]):
+async def trasfercmd(interaction: discord.Interaction, target_user: str, value: app_commands.Range[int, 1, 1000]):
     await interaction.response.defer(thinking=True)
     _T.set_locale(locale=interaction.locale)
     while LOCK.locked():
         await asyncio.sleep(1)
     async with LOCK:
         try:
-            target_userid = int(target_user.value)
+            target_user = int(target_user)
         except:
             _T.set_string(
                 string=_ls(
@@ -134,7 +132,7 @@ async def trasfercmd(interaction: discord.Interaction, target_user: Choice[str],
             await interaction.followup.send(_T.stranslate())
             return
         DB.connect()
-        status, data1, data2 = DB.ch_user_money(users=[interaction.user.id, target_userid], mode=TRANSFER, value=value)
+        status, data1, data2 = DB.ch_user_money(users=[interaction.user.id, target_user], mode=TRANSFER, value=value)
         DB.disconnect()
         if status == TRANSFFERED and data1 and data2:
             _T.set_string(
@@ -185,3 +183,18 @@ async def trasfercmd(interaction: discord.Interaction, target_user: Choice[str],
                 )
             )
         await interaction.followup.send(_T.stranslate())
+
+
+@trasfercmd.autocomplete("target_user")
+async def db_users_autocomplite(interaction: discord.Interaction, current: str):
+    while LOCK.locked():
+        await asyncio.sleep(0.5)
+    async with LOCK:
+        DB.connect()
+        DB.disconnect()
+        data = DB.users
+    ac = []
+    for _ in data:
+        if _.name.startswith(current):
+            ac.append(app_commands.Choice(name=str(_.name), value=str(_.value)))
+    return ac[:25]
