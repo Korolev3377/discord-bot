@@ -114,7 +114,7 @@ async def balancecmd(interaction: discord.Interaction):
     name=namedesc(TRANSFER_NAME, _locale),
     description=namedesc(TRANSFER_DESC, _locale)
 )
-@app_commands.rename(target_user="кому", value="сколько")
+@app_commands.rename(target_user=namedesc(TARGET, _locale), value=namedesc(VALUE, _locale))
 async def trasfercmd(interaction: discord.Interaction, target_user: str, value: app_commands.Range[int, 1, 1000]):
     await interaction.response.defer(thinking=True)
     _T.set_locale(locale=interaction.locale)
