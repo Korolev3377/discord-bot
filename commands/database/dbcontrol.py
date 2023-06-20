@@ -32,7 +32,7 @@ class DataBase:
         self.db_connection.commit()
         self.db_connection.close()
 
-    def get_user_info(self, user_id: int, user_name: str, user_language: str):
+    def get_user_info(self, user_id: int, user_name: str, user_language: str, create_usr=True):
         self.db_cursor.execute(f"""
         SELECT {ID}, {NAME}, {WEALTH}, {SCORE}, {LANGUAGE}
         FROM {USERS}
@@ -45,11 +45,13 @@ class DataBase:
             name = "{user_name}"
             WHERE id = {data.get(ID)};""")
             return data.get(WEALTH)
-        else:
+        elif create_usr:
             self.db_cursor.execute(f"""
             INSERT INTO users ({ID}, {NAME}, {WEALTH}, {SCORE}, {LANGUAGE})
             VALUES ({user_id}, "{user_name}", 0, 0, "{user_language}");""")
             return "usercreated"
+        else:
+            return "nouser"
 
     def ch_user_money(self, users: list, mode: str, value: int, new_name: str = None):
         if mode == ADD:

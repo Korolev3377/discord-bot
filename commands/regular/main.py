@@ -9,6 +9,7 @@ from translator.main import T
 from discord.app_commands import locale_str as _ls
 from environment.variable import *
 from environment.facts import Facts
+from commands.database.dbcontrol import DB
 
 _F = Facts()
 
@@ -24,7 +25,7 @@ NO_FACTS = "no_facts"
 CULTS_NAME = "cults_name"
 CULTS_DESC = "cults_desc"
 TOP_CULT = "top_cults"
-MEMBERS_COUNT = "members_count"
+CULT_INFO = "members_count"
 NO_CULTS = "no_cults"
 
 ROLLDICE_NAME = "rd_name"
@@ -46,8 +47,8 @@ _locale = {
                  RU: "Проверить наиболее популярные культы на этом сервере."},
     TOP_CULT: {EN: "Top {_} cults",
                RU: "Топ {_} культов"},
-    MEMBERS_COUNT: {EN: "Members: {_}.",
-                    RU: "Участников: {_}."},
+    CULT_INFO: {EN: "Members: {_}. Wealth: {_1}.",
+                RU: "Участников: {_}. Богатство: {_1}."},
     NO_CULTS: {EN: "Sorry, no cults on this server.",
                RU: "Извините, на этом сервере нет культов."},
 
@@ -58,7 +59,13 @@ _locale = {
     TOO_MANY_DICES: {EN: "Too many dices. Maxium == 10.",
                      RU: "Слишком много кубиков. Максимум - 10."},
     ZERO_OUTPUT: {EN: "No info for output. Check input.",
-                  RU: "Нет информации для вывода. Проверте ввод."}
+                  RU: "Нет информации для вывода. Проверте ввод."},
+    "sort_by": {EN: "sort",
+                RU: "сортировать"},
+    "by_members": {EN: "By members",
+                   RU: "По участникам"},
+    "by_wealth": {EN: "By wealth",
+                  RU: "По богатству"}
 }
 
 _T = T(locale_dict=_locale)
@@ -85,22 +92,58 @@ async def facts(interaction: discord.Interaction):
     name=namedesc(CULTS_NAME, _locale),
     description=namedesc(CULTS_DESC, _locale)
 )
-async def cults(interaction: discord.Interaction):
+@app_commands.rename(sort_by=namedesc("sort_by", _locale))
+@app_commands.choices(sort_by=[
+    app_commands.Choice(name=namedesc("by_members", _locale), value=0),
+    app_commands.Choice(name=namedesc("by_wealth", _locale), value=1)])
+async def cults(interaction: discord.Interaction, sort_by: app_commands.Choice[int] = 0):
     await interaction.response.defer()
     _T.set_locale(interaction.locale)
-    clist = []
+    sort_by = sort_by.value
+    clist = {}
+    cmoney = {}
     for member in interaction.guild.members:
-        if member.nick:
-            s = str.find(member.nick, '[') + 1
-            e = str.find(member.nick, ']')
-            if s != -1 and e != -1:
-                clist.append(str.lower(member.nick[s:e]))
-        else:
-            s = str.find(member.name, '[') + 1
-            e = str.find(member.name, ']')
-            if s != -1 and e != -1:
-                clist.append(str.lower(member.name[s:e]))
-    cults_tuple = list(dict(coll.Counter(clist).most_common(10)).items())
+        while LOCK.locked():
+            await asyncio.sleep(0.5)
+        async with LOCK:
+            DB.connect()
+            if member.nick:
+                s = str.find(member.nick, '[') + 1
+                e = str.find(member.nick, ']')
+                if s != -1 and e != -1:
+                    dat = DB.get_user_info(user_id=member.id, user_name=member.name,
+                                           user_language=_T.get_lang(interaction.locale.value), create_usr=False)
+                    if dat in ("usercreated", "nouser"):
+                        dat = 0
+                    if cmoney.get(str.lower(member.nick[s:e])):
+                        cmoney[str.lower(member.nick[s:e])] += dat
+                    else:
+                        cmoney[str.lower(member.nick[s:e])] = dat
+                    if clist.get(str.lower(member.nick[s:e])):
+                        clist[str.lower(member.nick[s:e])] += 1
+                    else:
+                        clist[str.lower(member.nick[s:e])] = 1
+            else:
+                s = str.find(member.name, '[') + 1
+                e = str.find(member.name, ']')
+                if s != -1 and e != -1:
+                    dat = DB.get_user_info(user_id=member.id, user_name=member.name,
+                                           user_language=_T.get_lang(interaction.locale.value), create_usr=False)
+                    if dat in ("usercreated", "nouser"):
+                        dat = 0
+                    if cmoney.get(str.lower(member.nick[s:e])):
+                        cmoney[str.lower(member.nick[s:e])] += dat
+                    else:
+                        cmoney[str.lower(member.nick[s:e])] = dat
+                    if clist.get(str.lower(member.nick[s:e])):
+                        clist[str.lower(member.nick[s:e])] += 1
+                    else:
+                        clist[str.lower(member.nick[s:e])] = 1
+            DB.disconnect()
+    if sort_by == 1:
+        cults_tuple = dict(coll.Counter(cmoney).most_common(10))
+    else:
+        cults_tuple = dict(coll.Counter(clist).most_common(10))
     if len(cults_tuple) > 0:
         embed = discord.Embed(
             title=_T.stranslate(
@@ -112,16 +155,16 @@ async def cults(interaction: discord.Interaction):
                 )
             )
         )
-        for i, cult in enumerate(cults_tuple):
-            cult_name, members_count = cult
-            if members_count > 1:
+        for i, cult_name in enumerate(cults_tuple.keys()):
+            if clist.get(cult_name) > 1:
                 embed.add_field(
                     name=f"{i + 1}) {capitalize_words(cult_name)}",
                     value=_T.stranslate(
                         _ls(
-                            MEMBERS_COUNT,
+                            CULT_INFO,
                             extras={
-                                FORMAT: {"_": members_count}
+                                FORMAT: {"_": clist.get(cult_name),
+                                         "_1": cmoney.get(cult_name)}
                             }
                         )
                     ),
