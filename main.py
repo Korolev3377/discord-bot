@@ -17,6 +17,7 @@ if __name__ == '__main__':
                              help_command=None,
                              strip_after_prefix=True,
                              intents=Cfg.INTENTS)
+            self.servers = []
             self.antispam = {}  # Это ограничитель спама комманд для каждого пользователя.
             # Срабатывает при превышении лимита и отключается при понижении до 0.
 
@@ -24,10 +25,9 @@ if __name__ == '__main__':
             # Это главный цикл бота. В нем идет пассивное уменьшение КД и проверка на то,
             # когда нужно будет менять Синего ника. Если вообще нужно будет.
 
-            self.Declare_Cmds = declare_cmds
-
         async def setup_hook(self):
             self.tree.interaction_check = itr_check
+            declare_cmds(self)
             await self.tree.set_translator(T())  # Установка переводчика
             await self.tree.sync()  # Синхронизация. Для обновления изменения комманд
 
@@ -163,5 +163,4 @@ if __name__ == '__main__':
     async def on_member_remove(member: discord.Member):
         await member.guild.system_channel.send("{user} left this Guild".format(user=member.mention))
 
-    BOT.Declare_Cmds(BOT)
     BOT.run(TOKEN)
