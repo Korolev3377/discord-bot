@@ -99,7 +99,6 @@ async def facts(interaction: discord.Interaction):
 async def cults(interaction: discord.Interaction, sort_by: app_commands.Choice[int] = 0):
     await interaction.response.defer()
     _T.set_language(interaction.locale)
-    sort_by = sort_by.value
     clist = {}
     cmoney = {}
     for member in interaction.guild.members:
@@ -111,10 +110,12 @@ async def cults(interaction: discord.Interaction, sort_by: app_commands.Choice[i
                 s = str.find(member.nick, '[') + 1
                 e = str.find(member.nick, ']')
                 if s != -1 and e != -1:
-                    dat = DB.get_user_info(user_id=member.id, user_name=member.name,
-                                           user_language=_T.get_lang(interaction.locale.value), create_usr=False)
-                    if dat in ("usercreated", "nouser"):
+                    dat = DB.execute("SELECT wealth FROM users WHERE id = ?;",
+                                     (member.id,))
+                    if not dat:
                         dat = 0
+                    else:
+                        dat = dat[0]
                     if cmoney.get(str.lower(member.nick[s:e])):
                         cmoney[str.lower(member.nick[s:e])] += dat
                     else:
@@ -127,10 +128,12 @@ async def cults(interaction: discord.Interaction, sort_by: app_commands.Choice[i
                 s = str.find(member.name, '[') + 1
                 e = str.find(member.name, ']')
                 if s != -1 and e != -1:
-                    dat = DB.get_user_info(user_id=member.id, user_name=member.name,
-                                           user_language=_T.get_lang(interaction.locale.value), create_usr=False)
-                    if dat in ("usercreated", "nouser"):
+                    dat = DB.execute("SELECT wealth FROM users WHERE id = ?;",
+                                     (member.id,))
+                    if not dat:
                         dat = 0
+                    else:
+                        dat = dat[0]
                     if cmoney.get(str.lower(member.nick[s:e])):
                         cmoney[str.lower(member.nick[s:e])] += dat
                     else:
