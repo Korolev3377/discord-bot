@@ -17,10 +17,7 @@ class DataBase:
     def connect(self):
         self.db_connection = sql.connect("database.db")
         self.db_cursor = self.db_connection.cursor()
-        self.db_cursor.execute(f"""
-        SELECT {NAME}, {ID}
-        FROM users
-        WHERE is_visible = 1;""")
+        self.db_cursor.execute("SELECT name, id FROM users WHERE is_visible = 1;")
         i = self.db_cursor.fetchall()
         dat = []
         if i:
@@ -33,136 +30,6 @@ class DataBase:
     def disconnect(self):
         self.db_connection.commit()
         self.db_connection.close()
-
-    def get_user_info(self, user_id: int, user_name: str, user_language: str, create_usr=True):
-        self.db_cursor.execute(f"""
-        SELECT {ID}, {NAME}, {WEALTH}, {SCORE}, {LANGUAGE}
-        FROM users
-        WHERE id = {user_id};""")
-        i = self.db_cursor.fetchone()
-        if i:
-            data = {ID: i[0], NAME: i[1], WEALTH: i[2], SCORE: i[3], LANGUAGE: i[4]}
-            self.db_cursor.execute(f"""
-            UPDATE users SET
-            name = "{user_name}"
-            WHERE id = {data.get(ID)};""")
-            return data.get(WEALTH)
-        elif create_usr:
-            self.db_cursor.execute(f"""
-            INSERT INTO users ({ID}, {NAME}, {WEALTH}, {SCORE}, {LANGUAGE})
-            VALUES ({user_id}, "{user_name}", 0, 0, "{user_language}");""")
-            return "usercreated"
-        else:
-            return "nouser"
-
-    def ch_user_money(self, users: list, mode: str, value: int, new_name: str = None):
-        if mode == ADD:
-            self.db_cursor.execute(f"""
-            SELECT {ID}, {NAME}, {WEALTH}, {SCORE}, {LANGUAGE}
-            FROM users
-            WHERE id = {users[0]};""")
-            i = self.db_cursor.fetchone()
-            if i:
-                data = {ID: i[0], NAME: i[1], WEALTH: i[2] + value, SCORE: i[3], LANGUAGE: i[4]}
-                self.db_cursor.execute(f"""
-                UPDATE users SET
-                wealth = {data.get(WEALTH)}
-                WHERE id = {data.get(ID)};""")
-                return "added", data.get(WEALTH)
-            else:
-                return "nouser", None
-
-        elif mode == SET:
-            self.db_cursor.execute(f"""
-            SELECT id,
-            name,
-            wealth,
-            score,
-            language
-            FROM users
-            WHERE id = {users[0]};""")
-            i = self.db_cursor.fetchone()
-            if i:
-                data = {"id": i[0], "name": i[1], "wealth": value, "score": i[3], "language": i[4]}
-                self.db_cursor.execute(f"""
-                UPDATE users SET
-                wealth = {data.get("wealth")}
-                WHERE id = {data.get("id")};""")
-                return "changed", None
-            else:
-                return "nouser", None
-
-        elif mode == "move" and len(users) == 2:
-            self.db_cursor.execute(f"""
-            SELECT id, name, wealth, score, language
-            FROM users
-            WHERE id = {users[0]};""")
-            i = self.db_cursor.fetchone()
-            if i:
-                data1 = {"id": i[0], "name": i[1], "wealth": i[2], "score": i[3], "language": i[4]}
-            else:
-                return "nouser1", None, None
-            self.db_cursor.execute(f"""
-            SELECT id, name, wealth, score, language
-            FROM users
-            WHERE id = {users[1]};""")
-            i = self.db_cursor.fetchone()
-            if i:
-                data2 = {"id": i[0], "name": i[1], "wealth": i[2], "score": i[3], "language": i[4]}
-            else:
-                return "nouser2", None, None
-            if data1.get("wealth") - value >= 0 and value > 0:
-                self.ch_user_money([data1.get("id")], ADD, -value)
-                self.ch_user_money([data2.get("id")], ADD, value)
-                return "tansfered", data1, data2
-            elif value <= 0:
-                return "valueerror", None, None
-            else:
-                return "notenoughmoney", data1, None
-        else:
-            return None
-
-    def get_persistent_msgs(self, user_id: int, user_name: str, user_language: str, create_usr=True):
-        self.db_cursor.execute(f"""
-        SELECT {ID}, {NAME}, {WEALTH}, {SCORE}, {LANGUAGE}
-        FROM users
-        WHERE id = {user_id};""")
-        i = self.db_cursor.fetchone()
-        if i:
-            data = {ID: i[0], NAME: i[1], WEALTH: i[2], SCORE: i[3], LANGUAGE: i[4]}
-            self.db_cursor.execute(f"""
-            UPDATE users SET
-            name = "{user_name}"
-            WHERE id = {data.get(ID)};""")
-            return data.get(WEALTH)
-        elif create_usr:
-            self.db_cursor.execute(f"""
-            INSERT INTO users ({ID}, {NAME}, {WEALTH}, {SCORE}, {LANGUAGE})
-            VALUES ({user_id}, "{user_name}", 0, 0, "{user_language}");""")
-            return "usercreated"
-        else:
-            return "nouser"
-
-    def add_persistent_msg(self, user_id: int, user_name: str, user_language: str, create_usr=True):
-        self.db_cursor.execute(f"""
-        SELECT {ID}, {NAME}, {WEALTH}, {SCORE}, {LANGUAGE}
-        FROM users
-        WHERE id = {user_id};""")
-        i = self.db_cursor.fetchone()
-        if i:
-            data = {ID: i[0], NAME: i[1], WEALTH: i[2], SCORE: i[3], LANGUAGE: i[4]}
-            self.db_cursor.execute(f"""
-            UPDATE users SET
-            name = "{user_name}"
-            WHERE id = {data.get(ID)};""")
-            return data.get(WEALTH)
-        elif create_usr:
-            self.db_cursor.execute(f"""
-            INSERT INTO users ({ID}, {NAME}, {WEALTH}, {SCORE}, {LANGUAGE})
-            VALUES ({user_id}, "{user_name}", 0, 0, "{user_language}");""")
-            return "usercreated"
-        else:
-            return "nouser"
 
     def execute(self, q: str, arg: tuple = None, fetchone: bool = True) -> Union[tuple, bool]:
         self.db_cursor.execute(q, arg) if arg else self.db_cursor.execute(q)
