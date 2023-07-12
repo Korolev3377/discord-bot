@@ -134,7 +134,7 @@ if __name__ == '__main__':
 
     @BOT.event
     async def on_message(message):
-        if message.author == BOT.user or message.author.bot:
+        if message.author == BOT.user or message.author.bot or message.guild.get_member(872406824765251594):
             return
 
         msg = message.content.lower()
