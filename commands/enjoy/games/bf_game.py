@@ -32,41 +32,41 @@ class Brainfuck:
 		else:
 			return 0
 			
-	def run(self, code, inp=None):
-		if inp:
-			inp = [ord(self.cp1251(i)) for i in inp]
-		code = self.check(code)
-		brackets = self.bracket(code)
+	def run(self, data_code, data_input=None):
+		if data_input:
+			data_input = [ord(self.cp1251(i)) for i in data_input]
+		data_code = self.check(data_code)
+		brackets = self.bracket(data_code)
 		memory = [0 for _ in range(256)]
 		cursor = 0
 		i = 0
 		out = []
 		open_braces = 0
 		timer = 30000
-		while i < len(code):
-			if code[i] == ">":
+		while i < len(data_code):
+			if data_code[i] == ">":
 				cursor += 1
-			elif code[i] == "<":
+			elif data_code[i] == "<":
 				cursor -= 1
-			elif code[i] == "+":
+			elif data_code[i] == "+":
 				memory[cursor] += 1
-			elif code[i] == "-":
+			elif data_code[i] == "-":
 				memory[cursor] -= 1
-			elif code[i] == "%":
+			elif data_code[i] == "%":
 				memory = [0 for _ in range(256)]
-			elif code[i] == ".":
+			elif data_code[i] == ".":
 				char = self.cp1251(memory[cursor])
 				if char != "`":
 					out.append(char)
-			elif code[i] == ",":
-				if inp:
-					memory[cursor] = inp.pop(0)
+			elif data_code[i] == ",":
+				if data_input:
+					memory[cursor] = data_input.pop(0)
 				else:
 					memory[cursor] = 0
-			elif code[i] == '[':
+			elif data_code[i] == '[':
 				if not memory[cursor]:
 					i = brackets[i]
-			elif code[i] == ']':
+			elif data_code[i] == ']':
 				if memory[cursor]:
 					i = brackets[i]
 			if memory[cursor] < 0:

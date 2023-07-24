@@ -25,7 +25,8 @@ _locale = {
 @app_commands.command(
     name=namedesc(BRAINFUCK_NAME, _locale),
     description=namedesc(BRAINFUCK_DESC, _locale),
-    extras={IS_BROKEN: True}
+    extras={IS_BROKEN: False}
 )
 async def bf_cmd(interaction, code: str, *, enter: str = None):
-    await interaction.followup.send("`", Brainfuck().run(code, input), "`")
+    await interaction.response.defer(thinking=True)
+    await interaction.followup.send("`"+Brainfuck().run(code, enter)+"`")
