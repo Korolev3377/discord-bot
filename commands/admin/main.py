@@ -183,5 +183,4 @@ class CapsuleModal(ui.Modal):
         self.submit = submit
 
     async def on_submit(self, interaction: discord.Interaction):
-        await interaction.response.send_message(self.submit, ephemeral=True)
         self.text = self.children[0].value
