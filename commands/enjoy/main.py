@@ -14,8 +14,8 @@ ENJOY_GROUP_DESC = "enjoygrp_desc"
 
 _locale = {ENJOY_GROUP_NAME: {EN: "game",
                               RU: "игра"},
-           ENJOY_GROUP_DESC: {EN: "Games commands groups.",
-                              RU: "Группа комманд игр."}
+           ENJOY_GROUP_DESC: {EN: "Funny commands",
+                              RU: "Веселые команды"}
            }
 
 _T = T(locale_dict=_locale)

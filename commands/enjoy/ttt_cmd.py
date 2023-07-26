@@ -24,8 +24,8 @@ _locale = {
         RU: 'крестики-нолики'
     },
     TTT_DESC: {
-        EN: 'Emulate tic tac toe field.',
-        RU: 'Эмулирует поле крестиков ноликов.'
+        EN: 'Create a Tic-tac-toe field',
+        RU: 'Создать поле для крестиков-ноликов'
     },
 
     PLAYER1_TURN: {EN: "Tic Tac Toe: Waiting for player {player1} :red_circle:",
@@ -37,18 +37,18 @@ _locale = {
     PLAYER1_WIN: {
         EN: "Tic Tac Toe: Game over\n"
             "{player1} :red_circle: Won!\n"
-            "{player2} :green_circle: Loses!",
+            "{player2} :green_circle: Lost!",
         RU: "Крестики Нолики: Игра окончена\n"
-            "{player1} :red_circle: Побеждает!\n"
-            "{player2} :green_circle: Проигрывает!"},
+            "{player1} :red_circle: Победил!\n"
+            "{player2} :green_circle: Проиграл!"},
 
     PLAYER2_WIN: {
         EN: "Tic Tac Toe: Game over\n"
             "Player {player2} :green_circle: Won!\n"
-            "Player {player1} :red_circle: Loses!",
+            "Player {player1} :red_circle: Lost!",
         RU: "Крестики Нолики: Игра окончена\n"
-            "Игрок {player2} :green_circle: Побеждает!\n"
-            "Игрок {player1} :red_circle: Проигрывает!"},
+            "Игрок {player2} :green_circle: Победил!\n"
+            "Игрок {player1} :red_circle: Проиграл!"},
 
     DRAW: {
         EN: "Tic Tac Toe: Game over\n"
