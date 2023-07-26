@@ -31,7 +31,7 @@ NO_CULTS = "no_cults"
 BY_WEALTH = "by_wealth"
 BY_MEMBERS = "by_members"
 SORT = "sort"
-
+DICEARGS = "diceargs"
 ROLLDICE_CMD_NAME = "rolldice_cmd_name"
 ROLLDICE_CMD_DESC = "rolldice_cmd_desc"
 TOO_MANY_DICE = "too_many_dice"
@@ -69,7 +69,9 @@ _locale = {
     BY_MEMBERS: {EN: "By members",
                  RU: "По участникам"},
     BY_WEALTH: {EN: "By wealth",
-                RU: "По богатству"}
+                RU: "По богатству"},
+    DICEARGS: {EN: "Dice",
+               RU: "Игральные кубики"}
 }
 
 _T = T(locale_dict=_locale)
@@ -186,6 +188,7 @@ async def cults(interaction: discord.Interaction, sort_by: app_commands.Choice[i
     name=namedesc(ROLLDICE_CMD_NAME, _locale),
     description=namedesc(ROLLDICE_CMD_DESC, _locale)
 )
+@app_commands.rename(dice_args=namedesc(DICEARGS, _locale))
 async def rolldice(interaction: discord.Interaction, *, dice_args: str):
     await interaction.response.defer()
     _T.set_language(interaction.locale)

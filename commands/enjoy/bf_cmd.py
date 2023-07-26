@@ -9,6 +9,8 @@ from .games.bf_game import Brainfuck
 
 BRAINFUCK_NAME = 'bf_name'
 BRAINFUCK_DESC = "bf_desc"
+CODE = "code"
+ENTER = "enter"
 
 _locale = {
     BRAINFUCK_NAME: {
@@ -18,7 +20,11 @@ _locale = {
     BRAINFUCK_DESC: {
         EN: 'Brainfuck code reader',
         RU: 'Запустить брэйнфак-код'
-    }
+    },
+    CODE: {EN: "Code",
+           RU: "Код"},
+    ENTER: {EN: "Input",
+            RU: "Ввод"}
 }
 
 
@@ -27,6 +33,7 @@ _locale = {
     description=namedesc(BRAINFUCK_DESC, _locale),
     extras={IS_BROKEN: False}
 )
+@app_commands.rename(code=namedesc(CODE, _locale), enter=namedesc(ENTER, _locale))
 async def bf_cmd(interaction, code: str, *, enter: str = None):
     await interaction.response.defer(thinking=True)
     await interaction.followup.send("`"+Brainfuck().run(code, enter)[:1998]+"`")
