@@ -55,7 +55,7 @@ if __name__ == '__main__':
             if BOT.antispam.get(_user).get(IS_USER_OVERLOADED):
                 _T.set_string(
                     _ls(
-                        "on_cd",
+                        "on_cooldown",
                         extras={
                             FORMAT: {
                                 "_": int(

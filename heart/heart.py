@@ -29,6 +29,7 @@ class Heart:
                 _user['overload'] = 0
             if _user.get('overload') > 100:
                 _user['overloaded'] = True
+                _user['overload'] = 100
             if _user.get('overload') == 0:
                 self.bot.antispam.pop(_id)
         self.cycle += cooling_rate/1000

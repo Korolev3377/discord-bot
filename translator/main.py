@@ -12,26 +12,26 @@ class T(app_commands.Translator):
             self.locale_dict = locale_dict
         else:
             self.locale_dict = {
-                "_": {"en": "_",
-                      "ru": "_"},
+                "_": {EN: "_",
+                      RU: "_"},
 
-                "cmd_broken": {"en": "Sorry. This command broken! :(",
-                               "ru": "Простите. Эта комманда сломана! :("},
+                "cmd_broken": {EN: "Sorry. This command is broken! :(",
+                               RU: "Простите. Эта комманда сломана! :("},
 
-                "cmd_disabled": {"en": "Sorry. This command disabled! :(",
-                                 "ru": "Простите. Эта комманда отключена! :("},
+                "cmd_disabled": {EN: "Sorry. This command is disabled! :(",
+                                 RU: "Простите. Эта комманда отключена! :("},
 
-                "cmd_adminonly": {"en": "Sorry. This command only for admins! :(",
-                                  "ru": "Простите. Эта комманда только для администраторов! :("},
+                "cmd_adminonly": {EN: "Sorry. This command is for admins only! :(",
+                                  RU: "Простите. Эта комманда только для администраторов! :("},
 
-                "cmd_owneronly": {"en": "Sorry. This command disabled! :(",
-                                  "ru": "Простите. Эта комманда отключена! :("},
+                "cmd_owneronly": {EN: "Sorry. This command is disabled! :(",
+                                  RU: "Простите. Эта комманда отключена! :("},
 
-                "on_cd": {
-                    "en": "Whoa, you're overloading my fragile circuits... Please wait {_} seconds before "
-                          "making this request again.",
-                    "ru": "Оу, ты так мне цепи перегрузишь... Подожди, пожалуйста, {_} секунд, прежде чем "
-                          "спрашивать меня об этом снова."},
+                "on_cooldown": {
+                    EN: "Whoa, you're overloading my fragile circuits... "
+                        "Please wait {_} seconds before making this request again.",
+                    RU: "Оу, ты так мне цепи перегрузишь... "
+                        "Подожди, пожалуйста, {_} секунд, прежде чем спрашивать меня об этом снова."},
 
                 "…": {"en": "...",
                       "ru": "..."}
