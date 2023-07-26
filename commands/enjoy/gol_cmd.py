@@ -20,8 +20,8 @@ _locale = {
         RU: 'игра-в-жизнь'
     },
     GAME_OF_LIVE_DESC: {
-        EN: 'Emulate game of live field.',
-        RU: 'Эмулирует поле игры в жизнь.'
+        EN: 'Launch Game of life simulation',
+        RU: 'Запустить симуляцию Игры в жизнь'
     },
     START: {
         EN: "Start",

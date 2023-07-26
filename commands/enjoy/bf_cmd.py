@@ -13,11 +13,11 @@ BRAINFUCK_DESC = "bf_desc"
 _locale = {
     BRAINFUCK_NAME: {
         EN: 'brainfuck',
-        RU: 'брайнфак'
+        RU: 'брэйнфак'
     },
     BRAINFUCK_DESC: {
-        EN: 'Emulate bf code.',
-        RU: 'Эмулирует бф код.'
+        EN: 'Brainfuck code reader',
+        RU: 'Запустить брэйнфак-код'
     }
 }
 
