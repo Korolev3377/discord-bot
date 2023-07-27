@@ -75,15 +75,71 @@ admingrp.default_permissions = discord.Permissions.none()
 @app_commands.rename(msg=namedesc(MSG, _locale),
                      chnl=namedesc(CHNL, _locale))
 async def botsay(interaction: discord.Interaction, msg: str, chnl: str = None):
-    await interaction.response.defer(thinking=True, ephemeral=True)
-    if chnl:
-        chnl = await interaction.client.fetch_channel(int(chnl))
-    else:
+    await interaction.response.defer(ephemeral=True, thinking=True)
+    if not chnl:
         chnl = interaction.channel
-    await interaction.followup.send("Бэклог - сделать управление сообщением.")
-    # view с удалением, редактированием сообщением
-    # contex menu с возможностью создать view выше
-    await chnl.send(msg)
+
+    message = await chnl.send(msg)
+
+    view = BotsayView()
+
+    control_message = await interaction.user.send(content=message.jump_url, view=view)
+
+    data = {
+        "message_id": message.id,
+        "content": message.content,
+        "channel_id": message.channel.id
+    }
+
+    await DB.insert_message_data(message_id=control_message.id, message_data=pik.dumps(data))
+
+    await interaction.delete_original_response()
+
+
+class BotsayView(discord.ui.View):
+    def __init__(self):
+        super().__init__(timeout=None)
+
+    @discord.ui.button(label="Edit", style=discord.ButtonStyle.blurple, custom_id="editmessage")
+    async def editmessage(self, interaction: discord.Interaction, button: discord.ui.Button):
+        i = await DB.select_message_data(interaction.message.id)
+        if i:
+            data = pik.loads(i[0])
+            modal = self.EditModal(data.get("content"))
+            await interaction.response.send_modal(modal)
+            await modal.wait()
+            data["content"] = modal.data
+            await DB.update_message_data(interaction.message.id, pik.dumps(data))
+            try:
+                channel = await interaction.client.fetch_channel(data.get("channel_id"))
+                message = await channel.fetch_message(data.get("message_id"))
+                await message.edit(content=modal.data)
+            except:
+                await interaction.message.delete()
+        else:
+            await interaction.message.delete()
+
+    @discord.ui.button(label="Delete", style=discord.ButtonStyle.red, custom_id="deletemessage")
+    async def deletemessage(self, interaction: discord.Interaction, button: discord.ui.Button):
+        i = await DB.select_message_data(interaction.message.id)
+        if i:
+            data = pik.loads(i[0])
+            await DB.delete_message_data(interaction.message.id)
+            channel = await interaction.client.fetch_channel(data.get("channel_id"))
+            message = await channel.fetch_message(data.get("message_id"))
+            await message.delete()
+        await interaction.message.delete()
+
+    class EditModal(discord.ui.Modal):
+        data = None
+
+        def __init__(self, data):
+            super().__init__(title="Message edit")
+            self.add_item(ui.TextInput(label="Message content", default=data, style=discord.TextStyle.paragraph))
+
+        async def on_submit(self, interaction: discord.Interaction):
+            await interaction.response.defer(ephemeral=True)
+            self.data = self.children[0].value
 
 
 @botsay.autocomplete(CHNL)
@@ -102,13 +158,8 @@ async def capsule(interaction: discord.Interaction):
     await interaction.response.defer(thinking=True, ephemeral=False)
     view = CView(interaction.locale)
     message = await interaction.followup.send(view=view)
-    while LOCK.locked():  # Ожидание открытия замка
-        await asyncio.sleep(1)
-    async with LOCK:  # Закрытие замка
-        message = await message.fetch()
-        DB.connect()
-        DB.execute("INSERT INTO persistent (message_id, data) VALUES (?, ?);", (message.id, pik.dumps({})))
-        DB.disconnect()
+    message = await message.fetch()
+    await DB.execute("INSERT INTO persistent (message_id, data) VALUES (?, ?);", (message.id, pik.dumps({})))
 
 
 class CView(discord.ui.View):
@@ -127,16 +178,11 @@ class CView(discord.ui.View):
         user = None
 
         def __init__(self, lang=None):
-            super().__init__(label=_T.stranslate(_ls(CAPBUT), lang), style=discord.ButtonStyle.green ,custom_id="crcb")
+            super().__init__(label=_T.stranslate(_ls(CAPBUT), lang), style=discord.ButtonStyle.green, custom_id="crcb")
 
         async def callback(self, interaction: discord.Interaction):
-            while LOCK.locked():  # Ожидание открытия замка
-                await asyncio.sleep(1)
-            async with LOCK:  # Закрытие замка
-                message = interaction.message
-                DB.connect()
-                data = pik.loads(DB.execute("SELECT data FROM persistent WHERE message_id = ?;", (message.id,))[0])
-                DB.disconnect()
+            message = interaction.message
+            data = pik.loads(await DB.execute("SELECT data FROM persistent WHERE message_id = ?;", (message.id,))[0])
             if data:
                 self.text = data.get("text")
                 self.user = data.get("user")
@@ -164,13 +210,8 @@ class CView(discord.ui.View):
 
             await interaction.response.send_modal(modal)
             if not await modal.wait():
-                while LOCK.locked():  # Ожидание открытия замка
-                    await asyncio.sleep(1)
-                async with LOCK:  # Закрытие замка
-                    DB.connect()
-                    DB.execute("UPDATE persistent SET data = ? WHERE message_id = ?;",
-                               (pik.dumps({"text": modal.text, "user": interaction.user.name}), message.id))
-                    DB.disconnect()
+                await DB.execute("UPDATE persistent SET data = ? WHERE message_id = ?;",
+                                 (pik.dumps({"text": modal.text, "user": interaction.user.name}), message.id))
 
 
 class CapsuleModal(ui.Modal):
