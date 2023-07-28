@@ -70,3 +70,17 @@ def namedesc(name_desc, locale_dict):
             TYPE: CMD
         }
     )
+
+
+# ADMINS
+
+ADMIN_GRP_NAME = "admin_grp_name"
+ADMIN_GRP_DESC = "admin_grp_desc"
+BOTSAY_CMD_NAME = "botsay_cmd_name"
+BOTSAY_CMD_DESC = "botsay_cmd_desc"
+MSG = "msg"
+CHNL = "chnl"
+MODAL_TEXT_LABEL = "modal_text_label"
+MODAL_TITLE = "modal_title"
+DELETE = "delete"
+EDIT = "edit"
