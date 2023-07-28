@@ -55,10 +55,12 @@ _locale = {
                   RU: f"Вы перевели пользователю \"{{user2}}\" {{wealth}} {WEALTH_NAME.get('kto_chto')[0]}(а/ов)."},
     USER1_NOT_IN_DB: {EN: "Ouh nyo! You not in by database. Please execute \"/wallet balance\" command to fix it.",
                       RU: "Оу нет! Вас нету в моей базе данных. Выполните комманду \"/кошелек баланс\" что бы пофиксить это."},
-    USER2_NOT_IN_DB: {EN: f"Ouh nyo! You are trying to trasfer {WEALTH_NAME.get('en')[1]} to someone who is not in my database",
-                      RU: f"Оу нет! Вы пытаетесь перевести {WEALTH_NAME.get('kto_chto')[1]} пользователю, которого нету в моей базе данных."},
-    NOT_ENOUGH_MONEY: {EN: f"You are trying to transfer {{value}} {WEALTH_NAME.get('en')[1]}, but you only have {{wealth}} {WEALTH_NAME.get('en')[1]}.",
-                       RU: f"Вы пытаетесь прыгнуть выше головы! Невозможно перевести {{value}} {WEALTH_NAME.get('kto_chto')[1]}, когда у вас всего {{wealth}} {WEALTH_NAME.get('kto_chto')[0]}(а/ов)."},
+    USER2_NOT_IN_DB: {
+        EN: f"Ouh nyo! You are trying to trasfer {WEALTH_NAME.get('en')[1]} to someone who is not in my database",
+        RU: f"Оу нет! Вы пытаетесь перевести {WEALTH_NAME.get('kto_chto')[1]} пользователю, которого нету в моей базе данных."},
+    NOT_ENOUGH_MONEY: {
+        EN: f"You are trying to transfer {{value}} {WEALTH_NAME.get('en')[1]}, but you only have {{wealth}} {WEALTH_NAME.get('en')[1]}.",
+        RU: f"Вы пытаетесь прыгнуть выше головы! Невозможно перевести {{value}} {WEALTH_NAME.get('kto_chto')[1]}, когда у вас всего {{wealth}} {WEALTH_NAME.get('kto_chto')[0]}(а/ов)."},
     VALUE_ERROR: {EN: "An error in the value of the trasfer amouth.",
                   RU: "Ошибка в значении суммы перевода."},
     INT_ERROR: {EN: "An error in the value of the target user.",
@@ -84,10 +86,10 @@ async def balancecmd(interaction: discord.Interaction):
     await interaction.response.defer(thinking=True)
     _T.set_language(language=interaction.locale)
     i = await DB.execute("SELECT id, wealth FROM users WHERE id = ?;",
-                   (interaction.user.id,))
+                         (interaction.user.id,))
     if i:
         await DB.execute("UPDATE users SET name = ? WHERE id = ?;",
-                   (interaction.user.name, i[0]))
+                         (interaction.user.name, i[0]))
         _T.set_string(string=_ls(
             GETBALANCE,
             extras={FORMAT: {
@@ -96,7 +98,7 @@ async def balancecmd(interaction: discord.Interaction):
         ))
     else:
         await DB.execute("INSERT INTO users (name, language) VALUES (?, ?);",
-                   (interaction.user.name, interaction.locale))
+                         (interaction.user.name, interaction.locale))
         _T.set_string(
             string=_ls(
                 USER_CREATED
@@ -125,9 +127,9 @@ async def trasfercmd(interaction: discord.Interaction, user2_id: str, value: app
         return
 
     user1 = await DB.execute("SELECT name, wealth FROM users WHERE id = ?;",
-                       (interaction.user.id,))  # Получение имени и количество лотов пользователя 1
+                             (interaction.user.id,))  # Получение имени и количество лотов пользователя 1
     user2 = await DB.execute("SELECT name, wealth FROM users WHERE id = ?;",
-                       (user2_id,))  # Получение имени и количество лотов пользователя 2
+                             (user2_id,))  # Получение имени и количество лотов пользователя 2
     if not user1:
         _T.set_string(
             string=_ls(
@@ -142,9 +144,9 @@ async def trasfercmd(interaction: discord.Interaction, user2_id: str, value: app
         )
     elif user1[1] - value >= 0 and value > 0:
         await DB.execute("UPDATE users SET wealth = ? WHERE id = ?;",
-                   (user1[1] - value, interaction.user.id))
+                         (user1[1] - value, interaction.user.id))
         await DB.execute("UPDATE users SET wealth = ? WHERE id = ?;",
-                   (user2[1] + value, user2_id))
+                         (user2[1] + value, user2_id))
         _T.set_string(
             string=_ls(
                 TRANSFFERED,

@@ -61,18 +61,28 @@ class T(app_commands.Translator):
         else:
             string = self.string
 
-        if ln:
-            language = ln
-        else:
-            language = self.language
+        try:
+            if ln:
+                ln = ln.value
+            elif self.language:
+                ln = self.language.value
+            else:
+                ln = discord.Locale.american_english.value
+        except:
+            if ln:
+                ln = ln
+            elif self.language:
+                ln = self.language
+            else:
+                ln = discord.Locale.american_english
+        finally:
+            ln = self.get_lang(ln)
 
         if self.locale_dict:
             result = self.locale_dict.get(string.message)  # Наименование, которое нужно перевести
             if not result:  # Если не удалось найти наименование в словаре перевода
                 self.translate_not_found.add(string.message)
                 return string.message
-
-            ln = self.get_lang(language.value)
 
             result = result.get(ln)  # Получение перевода из locale_dict
             if not result:
