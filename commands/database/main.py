@@ -82,8 +82,8 @@ async def balancecmd(interaction: discord.Interaction):
             }}
         ))
     else:
-        await DB.execute("INSERT INTO users (name, language) VALUES (?, ?);",
-                         (interaction.user.name, interaction.locale))
+        await DB.execute("INSERT INTO users (id, name, language) VALUES (?, ?, ?);",
+                         (interaction.user.id, interaction.user.name, interaction.locale.value))
         _T.set_string(
             string=_ls(
                 USER_CREATED
@@ -121,12 +121,16 @@ async def trasfercmd(interaction: discord.Interaction, user2_id: str, value: app
                 USER1_NOT_IN_DB
             )
         )
+        await interaction.followup.send(_T.stranslate())
+        return
     elif not user2:
         _T.set_string(
             string=_ls(
                 USER2_NOT_IN_DB
             )
         )
+        await interaction.followup.send(_T.stranslate())
+        return
     elif user1[1] - value >= 0 and value > 0:
         await DB.execute("UPDATE users SET wealth = ? WHERE id = ?;",
                          (user1[1] - value, interaction.user.id))
@@ -143,12 +147,15 @@ async def trasfercmd(interaction: discord.Interaction, user2_id: str, value: app
                 }
             )
         )
+        await interaction.followup.send(_T.stranslate())
     elif value <= 0:
         _T.set_string(
             string=_ls(
                 VALUE_ERROR
             )
         )
+        await interaction.followup.send(_T.stranslate())
+        return
     else:
         _T.set_string(
             string=_ls(
@@ -161,7 +168,8 @@ async def trasfercmd(interaction: discord.Interaction, user2_id: str, value: app
                 }
             )
         )
-    await interaction.followup.send(_T.stranslate())
+        await interaction.followup.send(_T.stranslate())
+        return
 
     await interaction.client.get_user(interaction.user.id).send(_T.stranslate(_ls(BALANCE_CHANGED + "0",
                                                                                   extras={
@@ -188,6 +196,6 @@ async def db_users_autocomplite(interaction: discord.Interaction, current: str):
     data = await DB.execute("SELECT id, name FROM users WHERE is_visible = 1;", fetchone=False)
     ac = []
     for _ in data:
-        if _[1].startswith(current):
+        if current in _[1]:
             ac.append(app_commands.Choice(name=str(_[1]), value=str(_[0])))
     return ac[:25]

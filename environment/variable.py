@@ -90,7 +90,6 @@ EDIT = "edit"
 
 # ECONOMIC
 
-
 BALANCE_CHANGED = "balance_changed"
 USER_2 = "user2"
 TARGET = "target"
@@ -110,3 +109,7 @@ TRANSFER_NAME = "tfn"
 TRANSFER_DESC = "tfd"
 BALANCE_NAME = "wbalancen"
 BALANCE_DESC = "wbalanced"
+
+# SHOP
+
+
