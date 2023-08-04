@@ -6,3 +6,9 @@ from abc import ABC
 class Cfg(ABC):
     CMD_PREFIX = when_mentioned_or(">_", "!")
     INTENTS = Intents.all()
+
+
+default_cfg_data = {
+    "cfg_data": {},
+    "shop_data": {}
+}

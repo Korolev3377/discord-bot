@@ -5,6 +5,7 @@ import discord
 import traceback
 from discord.ext import commands
 from discord.app_commands import locale_str as _ls
+import pickle as pik
 
 from commands.main import declare_cmds
 from environment.main import TOKEN, Cfg, Facts
@@ -12,6 +13,7 @@ from environment.variable import *
 from heart.heart import Heart
 from translator.main import T
 from commands.admin.main import BotsayView
+from commands.database.dbcontrol import DB
 
 if __name__ == '__main__':
     class Bot(commands.Bot):
@@ -20,7 +22,7 @@ if __name__ == '__main__':
                              help_command=None,
                              strip_after_prefix=True,
                              intents=Cfg.INTENTS)
-            self.servers = []
+            self.guilds_data = {}
             self.antispam = {}  # Это ограничитель спама комманд для каждого пользователя.
             # Срабатывает при превышении лимита и отключается при понижении до 0.
 
@@ -29,23 +31,37 @@ if __name__ == '__main__':
             # когда нужно будет менять Синего ника. Если вообще нужно будет.
 
         async def setup_hook(self):
-            self.tree.interaction_check = itr_check
-            self.tree.on_error = on_error_handler
-            declare_cmds(self)
+            self.tree.interaction_check = itr_check  # Проверка на возможность выполнения команд
+            self.tree.on_error = on_error_handler  # Заглушка для ошибок
+            declare_cmds(self)  # Обьявить выбранные команды
             await self.tree.set_translator(T())  # Установка переводчика
             await self.tree.sync()  # Синхронизация. Для обновления изменения комманд
-            for i in (BotsayView,):
+            for i in (BotsayView,):  # Запуск постоянных View
                 self.add_view(i())
+            async for g in self.fetch_guilds():
+                data = await DB.execute("SELECT cfg_data FROM servers_config WHERE server_id IS ?;", (g.id,))
+                try:
+                    assert data[0]
+                    self.guilds_data[g.id] = pik.loads(data[0])
+                except:
+                    self.guilds_data[g.id] = {
+                        "roles_to_sale": {},
+                        "users_role_inv": {}
+                    }
+                    await DB.execute("INSERT INTO servers_config (server_id, cfg_data) VALUES (?, ?);",
+                                     (g.id, pik.dumps(self.guilds_data[g.id])))
 
 
     BOT = Bot()
     _F = Facts()
     _T = T()
 
-    async def on_error_handler(interaction: discord.Interaction, error):  # Проверка на возможность выполнения комманды
+
+    async def on_error_handler(interaction: discord.Interaction, error):
         _T.set_string(
             _ls("error")
         )
+        print(error)
         await interaction.followup.send(_T.stranslate(), ephemeral=True)
         return False
 
@@ -55,6 +71,7 @@ if __name__ == '__main__':
                 if BOT.antispam.get(_user).get(USER_LOAD) > 100.0:
                     BOT.antispam[_user][IS_USER_OVERLOADED] = True
             return True
+
 
     async def itr_check(interaction: discord.Interaction):  # Проверка на возможность выполнения комманды
         _T.set_language(interaction.locale)
@@ -148,14 +165,17 @@ if __name__ == '__main__':
         if not BOT.heart.beat.is_running():
             await BOT.heart.beat.start()
 
+
     @BOT.event
     async def on_connect():
         print("\nСоединение с Дискордом установлено!")
+
 
     @BOT.event
     async def on_disconnect():
         print("\nПотеря связи с Дискордом!")
         print('Цикл:', round(BOT.heart.cycle, 3), '-', time.ctime(time.time()))
+
 
     @BOT.event
     async def on_message(message):
@@ -184,11 +204,12 @@ if __name__ == '__main__':
 
     @BOT.event
     async def on_member_join(member: discord.Member):
-        await member.guild.system_channel.send("{user} joined this Guild".format(user=member.mention))
+        await member.guild.system_channel.send("{user} :inbox_tray:".format(user=member.mention))
 
 
     @BOT.event
     async def on_member_remove(member: discord.Member):
-        await member.guild.system_channel.send("{user} left this Guild".format(user=member.mention))
+        await member.guild.system_channel.send("{user} :outbox_tray:".format(user=member.mention))
+
 
     BOT.run(TOKEN)

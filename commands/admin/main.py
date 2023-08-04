@@ -29,7 +29,15 @@ _locale: dict = {
     MODAL_TITLE: {EN: "Message editor",
                   RU: "Редактирования сообщения"},
     MODAL_TEXT_LABEL: {EN: "Message content",
-                       RU: "Содержание сообщения"}
+                       RU: "Содержание сообщения"},
+    "shopaddrole_cmd_name": {EN: "add-role-to-shop",
+                             RU: "добавить-роль-в-магазин"},
+    "shopaddrole_cmd_desc": {EN: "Add role to shop",
+                             RU: "Добавить роль в магазин"},
+    "role": {EN: "role",
+             RU: "роль"},
+    "cost": {EN: "cost",
+             RU: "стоимость"}
 }
 
 _T = T(locale_dict=_locale)
@@ -79,7 +87,8 @@ class BotsayView(discord.ui.View):
 
     class EditMessageButton(discord.ui.Button):
         def __init__(self, locale=None):
-            super().__init__(label=_T.stranslate(_ls(EDIT), locale), style=discord.ButtonStyle.blurple, custom_id="editmessage")
+            super().__init__(label=_T.stranslate(_ls(EDIT), locale), style=discord.ButtonStyle.blurple,
+                             custom_id="editmessage")
 
         async def callback(self, interaction: discord.Interaction):
             i = await DB.select_message_data(interaction.message.id)
@@ -115,7 +124,8 @@ class BotsayView(discord.ui.View):
     class DeleteMessageButton(discord.ui.Button):
         def __init__(self, locale=None):
             _T.set_language(locale)
-            super().__init__(label=_T.stranslate(_ls(DELETE), locale), style=discord.ButtonStyle.red, custom_id="deletemessage")
+            super().__init__(label=_T.stranslate(_ls(DELETE), locale), style=discord.ButtonStyle.red,
+                             custom_id="deletemessage")
 
         async def callback(self, interaction: discord.Interaction):
             i = await DB.select_message_data(interaction.message.id)
@@ -132,4 +142,31 @@ class BotsayView(discord.ui.View):
 async def channel_autocomplite(interaction: discord.Interaction, current: str):
     return [app_commands.Choice(name=str(channel.name), value=str(channel.id))
             for channel in interaction.guild.channels
-            if channel.name.startswith(current) and channel.type.value in (0,)][:25]
+            if current in channel.name and channel.type.value in (0,)][:25]
+
+
+@admingrp.command(
+    name=namedesc("shopaddrole_cmd_name", _locale),
+    description=namedesc("shopaddrole_cmd_desc", _locale),
+    extras={IS_OWNER_ONLY: True}
+)
+@app_commands.rename(role=namedesc("role", _locale), cost=namedesc("cost", _locale))
+async def shopaddrolecmd(interaction: discord.Interaction, role: discord.Role, cost: app_commands.Range[int, -1]):
+    await interaction.response.defer(thinking=True, ephemeral=True)
+    cfg_data = interaction.client.guilds_data.get(interaction.guild.id)
+    # cfg_data = {roles_to_sale: {role_id: cost}, users_have_roles: {user_id: [roles_id]}
+    if cfg_data:
+        rts = cfg_data.get("roles_to_sale") or {}
+    else:
+        cfg_data["roles_to_sale"] = {}
+        rts = cfg_data.get("roles_to_sale") or {}
+    if cost >= 0:
+        rts[str(role.id)] = cost
+    else:
+        if rts.get(str(role.id)) is not None:
+            rts.pop(str(role.id))
+    cfg_data["roles_to_sale"] = rts
+    interaction.client.guilds_data[interaction.guild.id]["roles_to_sale"] = rts
+    await DB.execute("UPDATE servers_config SET cfg_data = ? WHERE server_id IS ?;",
+                     (pik.dumps(cfg_data), interaction.guild.id))
+    await interaction.followup.send("d0ne", ephemeral=True)
