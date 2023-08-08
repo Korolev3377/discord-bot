@@ -11,7 +11,6 @@ from environment.variable import *
 from environment.facts import Facts
 from commands.database.dbcontrol import DB
 
-
 _F = Facts()
 
 
@@ -112,8 +111,8 @@ async def cults(interaction: discord.Interaction, sort_by: app_commands.Choice[i
             s = str.find(member.nick, '[') + 1
             e = str.find(member.nick, ']')
             if s != -1 and e != -1:
-                dat = DB.execute("SELECT wealth FROM users WHERE id = ?;",
-                                 (member.id,))
+                dat = await DB.execute("SELECT wealth FROM users WHERE id = ?;",
+                                       (member.id,))
                 if not dat:
                     dat = 0
                 else:
@@ -127,23 +126,23 @@ async def cults(interaction: discord.Interaction, sort_by: app_commands.Choice[i
                 else:
                     clist[str.lower(member.nick[s:e])] = 1
         else:
-            s = str.find(member.name, '[') + 1
-            e = str.find(member.name, ']')
+            s = str.find(member.global_name, '[') + 1
+            e = str.find(member.global_name, ']')
             if s != -1 and e != -1:
-                dat = DB.execute("SELECT wealth FROM users WHERE id = ?;",
-                                 (member.id,))
+                dat = await DB.execute("SELECT wealth FROM users WHERE id = ?;",
+                                       (member.id,))
                 if not dat:
                     dat = 0
                 else:
                     dat = dat[0]
-                if cmoney.get(str.lower(member.nick[s:e])):
-                    cmoney[str.lower(member.nick[s:e])] += dat
+                if cmoney.get(str.lower(member.global_name[s:e])):
+                    cmoney[str.lower(member.global_name[s:e])] += dat
                 else:
-                    cmoney[str.lower(member.nick[s:e])] = dat
-                if clist.get(str.lower(member.nick[s:e])):
-                    clist[str.lower(member.nick[s:e])] += 1
+                    cmoney[str.lower(member.global_name[s:e])] = dat
+                if clist.get(str.lower(member.global_name[s:e])):
+                    clist[str.lower(member.global_name[s:e])] += 1
                 else:
-                    clist[str.lower(member.nick[s:e])] = 1
+                    clist[str.lower(member.global_name[s:e])] = 1
     if sort_by == 1:
         cults_tuple = dict(coll.Counter(cmoney).most_common(10))
     else:
@@ -208,7 +207,7 @@ async def rolldice(interaction: discord.Interaction, *, dice_args: str):
                     elif op == "*":
                         res *= int(num)
                     elif op == "/":
-                        res = res/int(num)
+                        res = res / int(num)
                 result.append(res)
         else:
             if not (1 < int(value) < 101):
@@ -222,7 +221,7 @@ async def rolldice(interaction: discord.Interaction, *, dice_args: str):
                 elif op == "*":
                     res *= int(num)
                 elif op == "/":
-                    if int(num)>0:
+                    if int(num) > 0:
                         res = res / int(num)
                     else:
                         res = 0
