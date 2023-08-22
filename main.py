@@ -3,6 +3,7 @@ import time
 import sys
 import discord
 import traceback
+import logging
 from discord.ext import commands
 from discord.app_commands import locale_str as _ls
 import pickle as pik
@@ -15,6 +16,8 @@ from translator.main import T
 from commands.admin.main import BotsayView
 from commands.database.dbcontrol import DB
 
+LOGGING_MODE = logging.INFO
+
 if __name__ == '__main__':
     class Bot(commands.Bot):
         def __init__(self):
@@ -22,6 +25,26 @@ if __name__ == '__main__':
                              help_command=None,
                              strip_after_prefix=True,
                              intents=Cfg.INTENTS)
+            # Настройка логгера.
+            self.logger = logging.getLogger(__name__)
+            self.logger.setLevel(LOGGING_MODE)
+
+            self.formatter = logging.Formatter("[%(asctime)s] [%(levelname)-8s] %(message)s ", datefmt='%Y-%m-%d %H:%M:%S')
+
+            curtime = round(time.time())
+            self.handler = logging.FileHandler(f"logs/{curtime}.log", mode='w')
+
+            self.handler.setFormatter(self.formatter)
+
+            self.stream = logging.StreamHandler(sys.stdout)
+            self.stream.setFormatter(self.formatter)
+
+            logging.Handler()
+            self.logger.addHandler(self.handler)
+            self.logger.addHandler(self.stream)
+
+            self.logger.debug(f"Логгер иницилизирован в модуле \"{__name__}\"...")
+
             self.guilds_data = {}
             self.antispam = {}  # Это ограничитель спама комманд для каждого пользователя.
             # Срабатывает при превышении лимита и отключается при понижении до 0.
@@ -38,16 +61,31 @@ if __name__ == '__main__':
             await self.tree.sync()  # Синхронизация. Для обновления изменения комманд
             for i in (BotsayView,):  # Запуск постоянных View
                 self.add_view(i())
-            async for g in self.fetch_guilds():
+            async for g in self.fetch_guilds():  # Загрузка кофига серверов.
                 data = await DB.execute("SELECT cfg_data FROM servers_config WHERE server_id IS ?;", (g.id,))
                 try:
                     assert data[0]
                     self.guilds_data[g.id] = pik.loads(data[0])
                 except:
-                    self.guilds_data[g.id] = {
-                        "roles_to_sale": {},
-                        "users_role_inv": {}
+                    data = {
+                        "roles_to_sale": {
+                            "role_id": {
+                                "id": "role_id",
+                                "name": "role name",
+                                "cost": None,
+                                "stock": 0,
+                                "visible": False
+                            }
+                            # cost - 0 - Бесплатное
+                            # cost - None - Не продается
+                            # stock - 0 - Закончился товар
+                            # stock - None - Бесконечное количество
+                        },
+                        "users_role_inv": {
+                            "user_id": []  # Лист ролей, которые есть у пользователя.
+                        }
                     }
+                    self.guilds_data[g.id] = data
                     await DB.execute("INSERT INTO servers_config (server_id, cfg_data) VALUES (?, ?);",
                                      (g.id, pik.dumps(self.guilds_data[g.id])))
 
@@ -61,7 +99,7 @@ if __name__ == '__main__':
         _T.set_string(
             _ls("error")
         )
-        print(error)
+        BOT.logger.error(error, interaction)
         await interaction.followup.send(_T.stranslate(), ephemeral=True)
         return False
 
@@ -158,23 +196,22 @@ if __name__ == '__main__':
 
     @BOT.event
     async def on_ready():
-        print('\nБот запущен!')
-        print(f"\nИмя: {BOT.user}\nИД: {BOT.user.id}")
+        BOT.logger.info(f"Бот запущен! Имя: {BOT.user} ИД: {BOT.user.id}")
         if translate_not_found := BOT.tree.translator.translate_not_found:
-            print(f"\nПеревод не найден для: {translate_not_found}")
+            BOT.logger.error(f"Перевод не найден для: {translate_not_found}")
         if not BOT.heart.beat.is_running():
             await BOT.heart.beat.start()
 
 
     @BOT.event
     async def on_connect():
-        print("\nСоединение с Дискордом установлено!")
+        BOT.logger.info("Соединение с Дискордом установлено!")
 
 
     @BOT.event
     async def on_disconnect():
-        print("\nПотеря связи с Дискордом!")
-        print('Цикл:', round(BOT.heart.cycle, 3), '-', time.ctime(time.time()))
+        BOT.logger.warning(f"""Потеря связи с Дискордом!
+Цикл: {round(BOT.heart.cycle, 3)} - {time.ctime(time.time())}""")
 
 
     @BOT.event
@@ -212,4 +249,4 @@ if __name__ == '__main__':
         await member.guild.system_channel.send("{user} :outbox_tray:".format(user=member.mention))
 
 
-    BOT.run(TOKEN)
+    BOT.run(TOKEN, log_formatter=BOT.formatter, log_level=LOGGING_MODE, log_handler=BOT.handler)

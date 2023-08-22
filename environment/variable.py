@@ -43,6 +43,10 @@ WEALTH_NAME = {"en": ("hex", "hex"),
                "kem_chem": ("хексом", "хексами"),
                "okom_ochom": ("хексе", "хексах")}
 
+WEALTH_NAME_EN = "hex"
+
+WEALTH_NAME_RU = "хекс"
+
 
 def create_group(group_name, group_desc, locale_dict):
     return app_commands.Group(
@@ -71,6 +75,19 @@ def namedesc(name_desc, locale_dict):
             TYPE: CMD
         }
     )
+
+
+def sort_by(obj_dict, key="id", orig="id", func=sorted):
+    rev_dict = {}
+    for k, v in obj_dict.items():
+        assert v.get(key) is not None
+        rev_dict[v.get(key)] = v
+    rev_dict = dict(func(rev_dict.items()))
+    output = {}
+    for k, v in rev_dict.items():
+        assert v.get(orig) is not None
+        output[v.get(orig)] = v
+    return output
 
 
 _ = "_"
@@ -112,4 +129,14 @@ BALANCE_DESC = "wbalanced"
 
 # SHOP
 
-
+HEX = "hex"
+FREE = "free"
+COST = "cost"
+ROLE = "role"
+ROLES_INV_D = "inv_cmd_desc"
+ROLES_INV = "inv_cmd"
+BUY_ROLES_D = "shop_cmd_desc"
+BUY_ROLES = "shop_cmd"
+SHOP_GROUP_D = "shop_group_desc"
+SHOP_GROUP = "shop_group"
+WEALTH_T = "wt"

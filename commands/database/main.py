@@ -1,6 +1,7 @@
 import discord
 import sqlite3
 import asyncio
+import pymorphy2
 
 from discord import app_commands
 from discord.app_commands import locale_str as _ls
@@ -10,13 +11,15 @@ from .dbcontrol import DB
 from translator.main import T
 from environment.variable import *
 
+MORPH_RU = pymorphy2.MorphAnalyzer(lang="ru")
+
 _locale = {
-    GETBALANCE: {EN: f"You have {{lots}} {WEALTH_NAME.get('en')[1]}.",
-                 RU: f"У тебя есть {{lots}} {WEALTH_NAME.get('kto_chto')[0]}(а/ов)."},
+    GETBALANCE: {EN: "You have {value}.",
+                 RU: "У тебя есть {value}."},
     TRANSFER_NAME: {EN: "trasfer",
                     RU: "перевод"},
-    TRANSFER_DESC: {EN: f"Transfer your {WEALTH_NAME.get('en')[1]} to outher user",
-                    RU: f"Дать {WEALTH_NAME.get('kto_chto')[1]} другому пользователю."},
+    TRANSFER_DESC: {EN: f"Transfer your {WEALTH_NAME_EN} to outher user",
+                    RU: f"Дать {WEALTH_NAME_RU} другому пользователю."},
     WEALTH_GRP_NAME: {EN: "wallet",
                       RU: "кошелек"},
     WEALTH_GRP_DESC: {EN: "You control your money.",
@@ -26,18 +29,18 @@ _locale = {
     BALANCE_DESC: {EN: "Get info about your savings.",
                    RU: "Смотреть на сколько у вас не хватает денег."},
     USER_CREATED: {
-        EN: f"You don't seem to be in my database. I will add you to it. Now you can check your balance, tranfer {WEALTH_NAME.get('en')[1]} and accept the transfer.",
-        RU: f"Похоже, вас нету в моей базе данных. Я добавлю вас в нее. Теперь вы можете проверять свой баланс, отправлять и принимать {WEALTH_NAME.get('kto_chto')[1]}."},
-    TRANSFFERED: {EN: f"You have transferred {{wealth}} {WEALTH_NAME.get('en')[1]} to the user \"{{user2}}\"",
-                  RU: f"Вы перевели {{wealth}} {WEALTH_NAME.get('kto_chto')[0]}(а/ов) пользователю \"{{user2}}\"."},
+        EN: f"You don't seem to be in my database. I will add you to it. Now you can check your balance, tranfer {WEALTH_NAME_EN} and accept the transfer.",
+        RU: f"Похоже, вас нету в моей базе данных. Я добавлю вас в нее. Теперь вы можете проверять свой баланс, отправлять и принимать {WEALTH_NAME_RU}."},
+    TRANSFFERED: {EN: "You have transferred {wealth} to the user \"{user2}\"",
+                  RU: "Вы перевели {wealth} пользователю \"{user2}\"."},
     USER1_NOT_IN_DB: {EN: "Ouh nyo! You not in by database. Please execute \"/wallet balance\" command to fix it.",
                       RU: "Оу нет! Вас нету в моей базе данных. Выполните комманду \"/кошелек баланс\" что бы пофиксить это."},
     USER2_NOT_IN_DB: {
-        EN: f"Ouh nyo! You are trying to trasfer {WEALTH_NAME.get('en')[1]} to someone who is not in my database",
-        RU: f"Оу нет! Вы пытаетесь перевести {WEALTH_NAME.get('kto_chto')[1]} пользователю, которого нету в моей базе данных."},
+        EN: f"Ouh nyo! You are trying to trasfer {WEALTH_NAME_EN} to someone who is not in my database",
+        RU: f"Оу нет! Вы пытаетесь перевести {WEALTH_NAME_RU} пользователю, которого нету в моей базе данных."},
     NOT_ENOUGH_MONEY: {
-        EN: f"You are trying to transfer {{value}} {WEALTH_NAME.get('en')[1]}, but you only have {{wealth}} {WEALTH_NAME.get('en')[1]}.",
-        RU: f"Вы пытаетесь прыгнуть выше головы! Невозможно перевести {{value}} {WEALTH_NAME.get('kto_chto')[1]}, когда у вас всего {{wealth}} {WEALTH_NAME.get('kto_chto')[0]}(а/ов)."},
+        EN: "You are trying to transfer {value}, but you only have {wealth}.",
+        RU: "Вы пытаетесь прыгнуть выше головы! Невозможно перевести {value}, когда у вас всего {wealth}."},
     VALUE_ERROR: {EN: "An error in the value of the trasfer amouth.",
                   RU: "Ошибка в значении суммы перевода."},
     INT_ERROR: {EN: "An error in the value of the target user.",
@@ -48,14 +51,16 @@ _locale = {
             RU: "сколько"},
     TARGET: {EN: "target",
              RU: "кому"},
-    BALANCE_CHANGED: {EN: f"Your balance has changed!\n{{old_value}} >>> {{new_value}} {WEALTH_NAME.get('en')[1]}.",
-                      RU: f"Ваш баланс изменился!\n{{old_value}} >>> {{new_value}} {WEALTH_NAME.get('kto_chto')[0]}(а/ов)."},
+    WEALTH_T: {EN: WEALTH_NAME_EN,
+               RU: WEALTH_NAME_RU},
+    BALANCE_CHANGED: {EN: "Your balance has changed!\n{old_value} >>> {new_value}.",
+                      RU: "Ваш баланс изменился!\n{old_value} >>> {new_value}."},
     BALANCE_CHANGED + "0": {
-        EN: f"Your balance has changed!\n{{old_value}} >>> {{new_value}} {WEALTH_NAME.get('en')[1]}.\nYou have transferred {{value}} {WEALTH_NAME.get('en')[1]} to the user \"{{user}}\".",
-        RU: f"Ваш баланс изменился!\n{{old_value}} >>> {{new_value}} {WEALTH_NAME.get('kto_chto')[0]}(а/ов).\nВы перевели {{value}} {WEALTH_NAME.get('kto_chto')[0]}(а/ов) пользователю \"{{user}}\"."},
+        EN: "Your balance has changed!\n{old_value} >>> {new_value}.\nYou have transferred {value} to the user \"{user}\".",
+        RU: "Ваш баланс изменился!\n{old_value} >>> {new_value}.\nВы перевели {value} пользователю \"{user}\"."},
     BALANCE_CHANGED + "1": {
-        EN: f"Your balance has changed!\n{{old_value}} >>> {{new_value}} {WEALTH_NAME.get('en')[1]}.\nUser \"{{user}}\" has transferred {{value}} {WEALTH_NAME.get('en')[1]} to you.",
-        RU: f"Ваш баланс изменился!\n{{old_value}} >>> {{new_value}} {WEALTH_NAME.get('kto_chto')[0]}(а/ов).\nПользователь \"{{user}}\" перевел вам {{value}} {WEALTH_NAME.get('kto_chto')[0]}(а/ов)."}
+        EN: "Your balance has changed!\n{old_value} >>> {new_value}.\nUser \"{user}\" has transferred {value} to you.",
+        RU: "Ваш баланс изменился!\n{old_value} >>> {new_value}.\nПользователь \"{user}\" перевел вам {value}."}
 }
 
 _T = T(locale_dict=_locale)
@@ -78,7 +83,7 @@ async def balancecmd(interaction: discord.Interaction):
         _T.set_string(string=_ls(
             GETBALANCE,
             extras={FORMAT: {
-                "lots": _T.stranslate(st=_ls(i[1]))
+                VALUE: f"{i[1]} {MORPH_RU.parse(_T.stranslate(_ls(WEALTH_T)))[0].make_agree_with_number(i[1]).word}"
             }}
         ))
     else:
@@ -111,6 +116,9 @@ async def trasfercmd(interaction: discord.Interaction, user2_id: str, value: app
         await interaction.followup.send(_T.stranslate())
         return
 
+    if interaction.user.id == user2_id:
+        interaction.client.logger.warning(f"Пользователь {interaction.user.name} пробует перевести лоты себе самому.")
+
     user1 = await DB.execute("SELECT name, wealth, language FROM users WHERE id = ?;",
                              (interaction.user.id,))  # Получение имени и количество лотов пользователя 1
     user2 = await DB.execute("SELECT name, wealth, language FROM users WHERE id = ?;",
@@ -134,6 +142,8 @@ async def trasfercmd(interaction: discord.Interaction, user2_id: str, value: app
     elif user1[1] - value >= 0 and value > 0:
         await DB.execute("UPDATE users SET wealth = ? WHERE id = ?;",
                          (user1[1] - value, interaction.user.id))
+        user2 = await DB.execute("SELECT name, wealth, language FROM users WHERE id = ?;",
+                                 (user2_id,))
         await DB.execute("UPDATE users SET wealth = ? WHERE id = ?;",
                          (user2[1] + value, user2_id))
         _T.set_string(
@@ -141,7 +151,7 @@ async def trasfercmd(interaction: discord.Interaction, user2_id: str, value: app
                 TRANSFFERED,
                 extras={
                     FORMAT: {
-                        WEALTH: value,
+                        WEALTH: f"{value} {MORPH_RU.parse(_T.stranslate(_ls(WEALTH_T)))[0].make_agree_with_number(value).word}",
                         USER_2: user2[0]
                     }
                 }
@@ -162,8 +172,8 @@ async def trasfercmd(interaction: discord.Interaction, user2_id: str, value: app
                 NOT_ENOUGH_MONEY,
                 extras={
                     FORMAT: {
-                        WEALTH: user1[1],
-                        VALUE: value
+                        WEALTH: f"{user1[1]} {MORPH_RU.parse(_T.stranslate(_ls(WEALTH_T)))[0].make_agree_with_number(user1[1]).word}",
+                        VALUE: f"{value} {MORPH_RU.parse(_T.stranslate(_ls(WEALTH_T)))[0].make_agree_with_number(value).word}"
                     }
                 }
             )
@@ -174,19 +184,19 @@ async def trasfercmd(interaction: discord.Interaction, user2_id: str, value: app
     await interaction.client.get_user(interaction.user.id).send(_T.stranslate(_ls(BALANCE_CHANGED + "0",
                                                                                   extras={
                                                                                       FORMAT: {
-                                                                                          "old_value": user1[1],
-                                                                                          "new_value": user1[1] - value,
+                                                                                          "old_value": f"{user1[1]} {MORPH_RU.parse(_T.stranslate(_ls(WEALTH_T)))[0].make_agree_with_number(user1[1]).word}",
+                                                                                          "new_value": f"{user1[1] - value} {MORPH_RU.parse(_T.stranslate(_ls(WEALTH_T)))[0].make_agree_with_number(user1[1] - value).word}",
                                                                                           "user": user2[0],
-                                                                                          "value": value
+                                                                                          VALUE: f"{value} {MORPH_RU.parse(_T.stranslate(_ls(WEALTH_T)))[0].make_agree_with_number(value).word}"
                                                                                       }
                                                                                   }), user2[2]))
     await interaction.client.get_user(user2_id).send(_T.stranslate(_ls(BALANCE_CHANGED + "1",
                                                                        extras={
                                                                            FORMAT: {
-                                                                               "old_value": user2[1],
-                                                                               "new_value": user2[1] + value,
+                                                                               "old_value": f"{user2[1]} {MORPH_RU.parse(_T.stranslate(_ls(WEALTH_T)))[0].make_agree_with_number(user2[1]).word}",
+                                                                               "new_value": f"{user2[1] + value} {MORPH_RU.parse(_T.stranslate(_ls(WEALTH_T)))[0].make_agree_with_number(user2[1] + value).word}",
                                                                                "user": user1[0],
-                                                                               "value": value
+                                                                               VALUE: f"{value} {MORPH_RU.parse(_T.stranslate(_ls(WEALTH_T)))[0].make_agree_with_number(value).word}"
                                                                            }
                                                                        }), user2[2]))
 
