@@ -37,7 +37,11 @@ _locale: dict = {
     "role": {EN: "role",
              RU: "роль"},
     "cost": {EN: "cost",
-             RU: "стоимость"}
+             RU: "стоимость"},
+    "stock": {EN: "stock",
+              RU: "количество"},
+    "visible": {EN: "visible",
+                RU: "видимость"}
 }
 
 _T = T(locale_dict=_locale)
@@ -150,21 +154,28 @@ async def channel_autocomplite(interaction: discord.Interaction, current: str):
     description=namedesc("shopaddrole_cmd_desc", _locale),
     extras={IS_OWNER_ONLY: True}
 )
-@app_commands.rename(role=namedesc("role", _locale), cost=namedesc("cost", _locale))
-async def shopaddrolecmd(interaction: discord.Interaction, role: discord.Role, cost: app_commands.Range[int, -1]):
+@app_commands.rename(role=namedesc("role", _locale), cost=namedesc("cost", _locale), stock=namedesc("stock", _locale),
+                     visible=namedesc("visible", _locale))
+async def shopaddrolecmd(interaction: discord.Interaction, role: discord.Role, cost: app_commands.Range[int, -1],
+                         stock: app_commands.Range[int, -1], visible: bool = True):
     await interaction.response.defer(thinking=True, ephemeral=True)
     cfg_data = interaction.client.guilds_data.get(interaction.guild.id)
-    # cfg_data = {roles_to_sale: {role_id: cost}, users_have_roles: {user_id: [roles_id]}
     if cfg_data:
         rts = cfg_data.get("roles_to_sale") or {}
     else:
         cfg_data["roles_to_sale"] = {}
         rts = cfg_data.get("roles_to_sale") or {}
-    if cost >= 0:
-        rts[str(role.id)] = cost
-    else:
-        if rts.get(str(role.id)) is not None:
-            rts.pop(str(role.id))
+
+    role_data = rts.get(str(role.id)) or {}
+
+    role_data["id"] = str(role.id)
+    role_data["name"] = role.name
+    role_data["cost"] = cost if cost >= 0 else None
+    role_data["stock"] = stock if stock >= 0 else None
+    role_data["visible"] = visible
+
+    rts[str(role.id)] = role_data
+
     cfg_data["roles_to_sale"] = rts
     interaction.client.guilds_data[interaction.guild.id]["roles_to_sale"] = rts
     await DB.execute("UPDATE servers_config SET cfg_data = ? WHERE server_id IS ?;",
