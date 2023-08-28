@@ -25,9 +25,7 @@ _locale = {
     COST: {EN: f" - Cost: {{val}}",
            RU: f" - Цена: {{val}}"},
     FREE: {EN: "FREE",
-           RU: "БЕСПЛАТНО"},
-    HEX: {EN: f"{WEALTH_NAME.get('en')[1]}",
-          RU: f"{WEALTH_NAME.get('kto_chto')[0]}(а/ов)"}
+           RU: "БЕСПЛАТНО"}
 }
 
 _T = T(locale_dict=_locale)
