@@ -80,21 +80,13 @@ async def balancecmd(interaction: discord.Interaction):
     if i:
         await DB.execute("UPDATE users SET name = ? WHERE id = ?;",
                          (interaction.user.name, i[0]))
-        _T.set_string(string=_ls(
-            GETBALANCE,
-            extras={FORMAT: {
-                VALUE: f"{i[1]} {MORPH_RU.parse(_T.stranslate(_ls(WEALTH_T)))[0].make_agree_with_number(i[1]).word}"
-            }}
-        ))
+        message = ls(GETBALANCE,
+                     {VALUE: f"{i[1]} {MORPH_RU.parse(_T.stranslate(_ls(WEALTH_T)))[0].make_agree_with_number(i[1]).word}"})
     else:
         await DB.execute("INSERT INTO users (id, name, language) VALUES (?, ?, ?);",
                          (interaction.user.id, interaction.user.name, interaction.locale.value))
-        _T.set_string(
-            string=_ls(
-                USER_CREATED
-            )
-        )
-    await interaction.followup.send(_T.stranslate())
+        message = ls(USER_CREATED)
+    await interaction.followup.send(_T.stranslate(message))
 
 
 @wealthgrp.command(
@@ -105,38 +97,28 @@ async def balancecmd(interaction: discord.Interaction):
 async def trasfercmd(interaction: discord.Interaction, user2_id: str, value: app_commands.Range[int, 1, 1000]):
     await interaction.response.defer(thinking=True, ephemeral=True)
     _T.set_language(language=interaction.locale)  # Устанавливаем язык переводчика
-    r = 0
     string = TRANSFER_ERROR
     extras = None
     try:
         user2_id = int(user2_id)  # Проверка на int
     except:
-        _T.set_string(
-            string=_ls(
-                INT_ERROR  # Вывод ошибки, если таргет не int
-            )
-        )
-        await interaction.followup.send(_T.stranslate())
+        message = ls(INT_ERROR)
+        await interaction.followup.send(_T.stranslate(message))
         return
-
     if interaction.user.id == user2_id:
         interaction.client.logger.debug(f"Пользователь {interaction.user.name} пробует перевести лоты себе самому.")
-
     user1 = await DB.execute("SELECT name, wealth, language FROM users WHERE id = ?;",
                              (interaction.user.id,))  # Получение имени и количество лотов пользователя 1
     user2 = await DB.execute("SELECT name, wealth, language FROM users WHERE id = ?;",
                              (user2_id,))  # Получение имени и количество лотов пользователя 2
     if not user1:
-        _T.set_string(
-            string=_ls(
-                USER1_NOT_IN_DB
-            )
-        )
-        await interaction.followup.send(_T.stranslate())
+        message = ls(USER1_NOT_IN_DB)
+        await interaction.followup.send(_T.stranslate(message))
         return
     elif not user2:
-        string = USER2_NOT_IN_DB
-        r = 1
+        message = ls(USER2_NOT_IN_DB)
+        await interaction.followup.send(_T.stranslate(message))
+        return
     elif user1[1] - value >= 0 and value > 0:
         await DB.execute("UPDATE users SET wealth = ? WHERE id = ?;",
                          (user1[1] - value, interaction.user.id))
@@ -144,46 +126,20 @@ async def trasfercmd(interaction: discord.Interaction, user2_id: str, value: app
                                  (user2_id,))
         await DB.execute("UPDATE users SET wealth = ? WHERE id = ?;",
                          (user2[1] + value, user2_id))
-
-        string = TRANSFFERED,
-        extras = {FORMAT: {
-            WEALTH: f"{value} {MORPH_RU.parse(_T.stranslate(_ls(WEALTH_T)))[0].make_agree_with_number(value).word}",
-            USER_2: user2[0]}}
-
-        await interaction.followup.send(_T.stranslate())
+        message = TRANSFFERED
+        extras = {WEALTH: f"{value} {MORPH_RU.parse(_T.stranslate(_ls(WEALTH_T)))[0].make_agree_with_number(value).word}",
+                  USER_2: user2[0]}
+        await interaction.followup.send(_T.stranslate(ls(string=message, extras=extras)))
     elif value <= 0:
-        _T.set_string(
-            string=_ls(
-                VALUE_ERROR
-            )
-        )
-        await interaction.followup.send(_T.stranslate())
+        message = ls(VALUE_ERROR)
+        await interaction.followup.send(_T.stranslate(message))
         return
     else:
-        _T.set_string(
-            string=_ls(
-                NOT_ENOUGH_MONEY,
-                extras={
-                    FORMAT: {
-                        WEALTH: f"{user1[1]} {MORPH_RU.parse(_T.stranslate(_ls(WEALTH_T)))[0].make_agree_with_number(user1[1]).word}",
-                        VALUE: f"{value} {MORPH_RU.parse(_T.stranslate(_ls(WEALTH_T)))[0].make_agree_with_number(value).word}"
-                    }
-                }
-            )
-        )
-        await interaction.followup.send(_T.stranslate())
-        r = 1
-
-    _T.set_string(
-        string=_ls(
-            string
-        )
-    )
-    await interaction.followup.send(_T.stranslate())
-
-    if r:
+        message = ls(NOT_ENOUGH_MONEY,
+                     {WEALTH: f"{user1[1]} {MORPH_RU.parse(_T.stranslate(_ls(WEALTH_T)))[0].make_agree_with_number(user1[1]).word}",
+                              VALUE: f"{value} {MORPH_RU.parse(_T.stranslate(_ls(WEALTH_T)))[0].make_agree_with_number(value).word}"})
+        await interaction.followup.send(_T.stranslate(message))
         return
-
     await interaction.client.get_user(interaction.user.id).send(_T.stranslate(_ls(BALANCE_CHANGED + "0",
                                                                                   extras={
                                                                                       FORMAT: {
@@ -192,7 +148,7 @@ async def trasfercmd(interaction: discord.Interaction, user2_id: str, value: app
                                                                                           "user": user2[0],
                                                                                           VALUE: f"{value} {MORPH_RU.parse(_T.stranslate(_ls(WEALTH_T)))[0].make_agree_with_number(value).word}"
                                                                                       }
-                                                                                  }), user1[2]))
+                                                                                  }), user1[2]))  # FIXME
     await interaction.client.get_user(user2_id).send(_T.stranslate(_ls(BALANCE_CHANGED + "1",
                                                                        extras={
                                                                            FORMAT: {
@@ -201,7 +157,7 @@ async def trasfercmd(interaction: discord.Interaction, user2_id: str, value: app
                                                                                "user": user1[0],
                                                                                VALUE: f"{value} {MORPH_RU.parse(_T.stranslate(_ls(WEALTH_T), user2[2]))[0].make_agree_with_number(value).word}"
                                                                            }
-                                                                       }), user2[2]))
+                                                                       }), user2[2]))  # FIXME
 
 
 @trasfercmd.autocomplete("user2_id")
