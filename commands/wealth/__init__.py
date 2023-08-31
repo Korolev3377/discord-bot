@@ -81,7 +81,8 @@ async def balancecmd(interaction: discord.Interaction):
         await DB.execute("UPDATE users SET name = ? WHERE id = ?;",
                          (interaction.user.name, i[0]))
         message = ls(GETBALANCE,
-                     {VALUE: f"{i[1]} {MORPH_RU.parse(_T.stranslate(_ls(WEALTH_T)))[0].make_agree_with_number(i[1]).word}"})
+                     {
+                         VALUE: f"{i[1]} {MORPH_RU.parse(_T.stranslate(_ls(WEALTH_T)))[0].make_agree_with_number(i[1]).word}"})
     else:
         await DB.execute("INSERT INTO users (id, name, language) VALUES (?, ?, ?);",
                          (interaction.user.id, interaction.user.name, interaction.locale.value))
@@ -96,68 +97,59 @@ async def balancecmd(interaction: discord.Interaction):
 @app_commands.rename(user2_id=namedesc(TARGET, _locale), value=namedesc(VALUE, _locale))
 async def trasfercmd(interaction: discord.Interaction, user2_id: str, value: app_commands.Range[int, 1, 1000]):
     await interaction.response.defer(thinking=True, ephemeral=True)
+
     _T.set_language(language=interaction.locale)  # Устанавливаем язык переводчика
-    string = TRANSFER_ERROR
-    extras = None
+    stdout = TRANSFER_ERROR  # Эта переменная часто меняется тут. Нужно быть внимательнее.
+    success = False
+
     try:
         user2_id = int(user2_id)  # Проверка на int
     except:
-        message = ls(INT_ERROR)
-        await interaction.followup.send(_T.stranslate(message))
-        return
+        stdout = ls(INT_ERROR)
+
     if interaction.user.id == user2_id:
         interaction.client.logger.debug(f"Пользователь {interaction.user.name} пробует перевести лоты себе самому.")
-    user1 = await DB.execute("SELECT name, wealth, language FROM users WHERE id = ?;",
-                             (interaction.user.id,))  # Получение имени и количество лотов пользователя 1
-    user2 = await DB.execute("SELECT name, wealth, language FROM users WHERE id = ?;",
-                             (user2_id,))  # Получение имени и количество лотов пользователя 2
+
+    user1 = await DB.execute("SELECT name, wealth, language FROM users WHERE id = ?;", (interaction.user.id,))
+    # Получение имени и количество лотов пользователя 1
+
+    user2 = await DB.execute("SELECT name, wealth, language FROM users WHERE id = ?;", (user2_id,))
+    # Получение имени и количество лотов пользователя 2
+
     if not user1:
-        message = ls(USER1_NOT_IN_DB)
-        await interaction.followup.send(_T.stranslate(message))
-        return
+        stdout = ls(USER1_NOT_IN_DB)
     elif not user2:
-        message = ls(USER2_NOT_IN_DB)
-        await interaction.followup.send(_T.stranslate(message))
-        return
-    elif user1[1] - value >= 0 and value > 0:
-        await DB.execute("UPDATE users SET wealth = ? WHERE id = ?;",
-                         (user1[1] - value, interaction.user.id))
-        user2 = await DB.execute("SELECT name, wealth, language FROM users WHERE id = ?;",
-                                 (user2_id,))
-        await DB.execute("UPDATE users SET wealth = ? WHERE id = ?;",
-                         (user2[1] + value, user2_id))
-        message = TRANSFFERED
-        extras = {WEALTH: f"{value} {MORPH_RU.parse(_T.stranslate(_ls(WEALTH_T)))[0].make_agree_with_number(value).word}",
-                  USER_2: user2[0]}
-        await interaction.followup.send(_T.stranslate(ls(string=message, extras=extras)))
+        stdout = ls(USER2_NOT_IN_DB)
     elif value <= 0:
-        message = ls(VALUE_ERROR)
-        await interaction.followup.send(_T.stranslate(message))
-        return
+        stdout = ls(VALUE_ERROR)
+    elif user1[1] - value < 0:
+        stdout = ls(NOT_ENOUGH_MONEY,
+                    {WEALTH: f"{user1[1]} {MORPH_RU.parse(_T.stranslate(_ls(WEALTH_T)))[0].make_agree_with_number(user1[1]).word}",
+                     VALUE: f"{value} {MORPH_RU.parse(_T.stranslate(_ls(WEALTH_T)))[0].make_agree_with_number(value).word}"})
     else:
-        message = ls(NOT_ENOUGH_MONEY,
-                     {WEALTH: f"{user1[1]} {MORPH_RU.parse(_T.stranslate(_ls(WEALTH_T)))[0].make_agree_with_number(user1[1]).word}",
-                              VALUE: f"{value} {MORPH_RU.parse(_T.stranslate(_ls(WEALTH_T)))[0].make_agree_with_number(value).word}"})
-        await interaction.followup.send(_T.stranslate(message))
-        return
-    await interaction.client.get_user(interaction.user.id).send(_T.stranslate(_ls(BALANCE_CHANGED + "0",
-                                                                                  extras={
-                                                                                      FORMAT: {
-                                                                                          "old_value": f"{user1[1]} {MORPH_RU.parse(_T.stranslate(_ls(WEALTH_T), user1[2]))[0].make_agree_with_number(user1[1]).word}",
-                                                                                          "new_value": f"{user1[1] - value} {MORPH_RU.parse(_T.stranslate(_ls(WEALTH_T), user1[2]))[0].make_agree_with_number(user1[1] - value).word}",
-                                                                                          "user": user2[0],
-                                                                                          VALUE: f"{value} {MORPH_RU.parse(_T.stranslate(_ls(WEALTH_T)))[0].make_agree_with_number(value).word}"
-                                                                                      }
-                                                                                  }), user1[2]))  # FIXME
-    await interaction.client.get_user(user2_id).send(_T.stranslate(_ls(BALANCE_CHANGED + "1",
-                                                                       extras={
-                                                                           FORMAT: {
-                                                                               "old_value": f"{user2[1]} {MORPH_RU.parse(_T.stranslate(_ls(WEALTH_T), user2[2]))[0].make_agree_with_number(user2[1]).word}",
-                                                                               "new_value": f"{user2[1] + value} {MORPH_RU.parse(_T.stranslate(_ls(WEALTH_T)))[0].make_agree_with_number(user2[1] + value).word}",
-                                                                               "user": user1[0],
-                                                                               VALUE: f"{value} {MORPH_RU.parse(_T.stranslate(_ls(WEALTH_T), user2[2]))[0].make_agree_with_number(value).word}"
-                                                                           }
-                                                                       }), user2[2]))  # FIXME
+        await DB.execute("UPDATE users SET wealth = ? WHERE id = ?;", (user1[1] - value, interaction.user.id))
+        user2 = await DB.execute("SELECT name, wealth, language FROM users WHERE id = ?;", (user2_id,))
+        await DB.execute("UPDATE users SET wealth = ? WHERE id = ?;", (user2[1] + value, user2_id))
+        stdout = ls(TRANSFFERED,
+                    {WEALTH: f"{value} {MORPH_RU.parse(_T.stranslate(_ls(WEALTH_T)))[0].make_agree_with_number(value).word}",
+                     USER_2: user2[0]})
+        success = True
+
+    await interaction.followup.send(_T.stranslate(stdout))
+
+    if success:
+        stdout = ls(BALANCE_CHANGED + "0",
+                    {"old_value": f"{user1[1]} {MORPH_RU.parse(_T.stranslate(_ls(WEALTH_T), user1[2]))[0].make_agree_with_number(user1[1]).word}",
+                     "new_value": f"{user1[1] - value} {MORPH_RU.parse(_T.stranslate(_ls(WEALTH_T), user1[2]))[0].make_agree_with_number(user1[1] - value).word}",
+                     "user": user2[0],
+                     VALUE: f"{value} {MORPH_RU.parse(_T.stranslate(_ls(WEALTH_T), user2[2]))[0].make_agree_with_number(value).word}"})
+        await interaction.client.get_user(interaction.user.id).send(_T.stranslate(stdout, user1[2]))
+        stdout = ls(BALANCE_CHANGED + "1",
+                    {"old_value": f"{user2[1]} {MORPH_RU.parse(_T.stranslate(_ls(WEALTH_T), user2[2]))[0].make_agree_with_number(user2[1]).word}",
+                     "new_value": f"{user2[1] + value} {MORPH_RU.parse(_T.stranslate(_ls(WEALTH_T), user2[2]))[0].make_agree_with_number(user2[1] + value).word}",
+                     "user": user1[0],
+                     VALUE: f"{value} {MORPH_RU.parse(_T.stranslate(_ls(WEALTH_T), user2[2]))[0].make_agree_with_number(value).word}"})
+        await interaction.client.get_user(user2_id).send(_T.stranslate(stdout, user2[2]))
 
 
 @trasfercmd.autocomplete("user2_id")
