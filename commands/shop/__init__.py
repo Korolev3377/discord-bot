@@ -22,8 +22,8 @@ _locale = {
                   RU: "Управление персональными ролями"},
     ROLE: {EN: ROLE,
            RU: "роль"},
-    COST: {EN: f" - Cost: {{val}}",
-           RU: f" - Цена: {{val}}"},
+    COST: {EN: " - Cost: {val}",
+           RU: " - Цена: {val}"},
     FREE: {EN: "FREE",
            RU: "БЕСПЛАТНО"}
 }

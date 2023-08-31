@@ -124,7 +124,7 @@ if __name__ == '__main__':
         # Проверка на перегрузку
         if BOT.antispam.get(_user):
             if BOT.antispam.get(_user).get(IS_USER_OVERLOADED):
-                _T.set_string(locale_str(
+                _T.set_string(ls(
                     ON_COOLDOWN,
                     {TIME: int(BOT.heart.time_to_cooldown(BOT.antispam.get(_user).get(USER_LOAD)))}))
                 await interaction.response.send_message(_T.stranslate(), ephemeral=True)
@@ -138,26 +138,20 @@ if __name__ == '__main__':
 
         # Предупреждение, что эта комманда сломана.
         if interaction.command.extras.get(IS_BROKEN):
-            _T.set_string(
-                _ls(IS_BROKEN)  # FIXME
-            )
+            _T.set_string(_ls(IS_BROKEN))
             await interaction.response.send_message(_T.stranslate(), ephemeral=True)
             return False
 
         # Проверка на администратора сервера
         if not interaction.permissions.administrator and interaction.command.extras.get(IS_ADMIN_ONLY):
             if not await BOT.is_owner(interaction.user):
-                _T.set_string(
-                    _ls(IS_DM_ALLOWED)  # FIXME
-                )
+                _T.set_string(_ls(IS_DM_ALLOWED))
                 await interaction.response.send_message(_T.stranslate(), ephemeral=True)
                 return False
 
         # Проверка на создателя бота
         if not await BOT.is_owner(interaction.user) and interaction.command.extras.get(IS_OWNER_ONLY):
-            _T.set_string(
-                _ls(IS_OWNER_ONLY)  # FIXME
-            )
+            _T.set_string(_ls(IS_OWNER_ONLY))
             await interaction.response.send_message(_T.stranslate(), ephemeral=True)
             return False
 

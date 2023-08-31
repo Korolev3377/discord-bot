@@ -85,8 +85,8 @@ def sort_by(obj_dict, key="id", orig="id", func=sorted):
     return output
 
 
-def locale_str(string: str, format_dict: dict = None):
-    return _ls(string, extras={FORMAT: format_dict})
+def ls(string, extras: dict = None):
+    return _ls(string, extras={FORMAT: extras})
 
 
 _ = "_"
