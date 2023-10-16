@@ -169,6 +169,15 @@ async def cults(interaction: discord.Interaction, sortby: app_commands.Choice[in
     _T.set_language(interaction.locale)
     clist = {}
     cmoney = {}
+    await DB.execute("""CREATE TABLE if not exists users (
+        id INTEGER UNIQUE NOT NULL,
+        name STRING  NOT NULL,
+        wealth INTEGER DEFAULT (0),
+        score INTEGER DEFAULT (0),
+        language STRING,
+        funfact_ignore INTEGER DEFAULT (0),
+        is_visible INTEGER DEFAULT (1) 
+        );""")
     for member in interaction.guild.members:
         if member.nick:
             s = str.find(member.nick, '[') + 1
