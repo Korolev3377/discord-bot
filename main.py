@@ -198,7 +198,9 @@ if __name__ == '__main__':
 
             msg = message.content.lower()
 
-            if lang := _F.find_fact(msg=msg):
+            ignore = await DB.execute("SELECT funfact_ignore FROM users WHERE id = ?;", (message.author.id,))
+            ignore = ignore[0]
+            if lang := _F.find_fact(msg=msg) and ignore == 0:
                 if fact := await _F.read_facts(guild=message.guild, lang=lang):
                     await message.channel.send(fact)
 

@@ -18,59 +18,84 @@ def capitalize_words(string):
     return str.join(' ', [word.capitalize() for word in string.split(' ')])
 
 
-FACT_CMD_NAME = "fact_cmd_name"
-FACT_CMD_DESC = "fact_cmd_desc"
-NO_FACTS_IN_DB = "no_facts_in_db"
-
-CULTS_CMD_NAME = "cults_cmd_name"
-CULTS_CMD_DESC = "cults_cmd_desc"
-TOP_CULTS = "top_cults"
-MEMBERS_IN_CULT = "members_in_cult"
-NO_CULTS = "no_cults"
-BY_WEALTH = "by_wealth"
-BY_MEMBERS = "by_members"
-SORT = "sort"
-DICEARGS = "diceargs"
-ROLLDICE_CMD_NAME = "rolldice_cmd_name"
-ROLLDICE_CMD_DESC = "rolldice_cmd_desc"
-TOO_MANY_DICE = "too_many_dice"
-NOTHING_TO_ROLL = "nothing_to_roll"
-
 _locale = {
-    FACT_CMD_NAME: {EN: "fun-fact",
-                    RU: "забавный-факт"},
-    FACT_CMD_DESC: {EN: "Learn a fun fact",
-                    RU: "Узнать забавный факт"},
-    NO_FACTS_IN_DB: {EN: "Sorry... I don't have any facts yet! :(",
-                     RU: "Простите... У меня пока что нету фактов! :("},
+    FACT_CMD_NAME:
+        {EN: "fun-fact",
+         RU: "забавный-факт"},
+    FACT_CMD_DESC:
+        {EN: "Learn a fun fact",
+         RU: "Узнать забавный факт"},
+    NO_FACTS_IN_DB:
+        {EN: "Sorry... I don't have any facts yet! :(",
+         RU: "Простите... У меня пока что нету фактов! :("},
 
-    CULTS_CMD_NAME: {EN: "cults",
-                     RU: "культы"},
-    CULTS_CMD_DESC: {EN: "Show server cults",
-                     RU: "Показать культы сервера"},
-    TOP_CULTS: {EN: "Top cults",
-                RU: "Топ культов"},
-    MEMBERS_IN_CULT: {EN: "Members: {_} - Wealth: {_1}.",
-                      RU: "Участников: {_} - Богатство: {_1}."},  #
-    NO_CULTS: {EN: "Sorry, no cults on this server.",
-               RU: "Извините, на этом сервере нет культов."},
+    CULTS_CMD_NAME:
+        {EN: "cults",
+         RU: "культы"},
+    CULTS_CMD_DESC:
+        {EN: "Show server cults",
+         RU: "Показать культы сервера"},
+    TOP_CULTS:
+        {EN: "Top cults",
+         RU: "Топ культов"},
+    MEMBERS_IN_CULT:
+        {EN: "Members: {_} - Wealth: {_1}.",
+         RU: "Участников: {_} - Богатство: {_1}."},  #
+    NO_CULTS:
+        {EN: "Sorry, no cults on this server.",
+         RU: "Извините, на этом сервере нет культов."},
 
-    ROLLDICE_CMD_NAME: {EN: "roll-dice",
-                        RU: "кинуть-игральные-кости"},
-    ROLLDICE_CMD_DESC: {EN: "Randomizer",
-                        RU: "Рандомайзер"},
-    TOO_MANY_DICE: {EN: "Too many dice. Maximum is 10",
-                    RU: "Слишком много игральных костей. Максимум - 10"},
-    NOTHING_TO_ROLL: {EN: "Nothing to roll",
-                      RU: "Нечего кидать"},  #
-    SORT: {EN: "sort",
-           RU: "сортировать"},
-    BY_MEMBERS: {EN: "By members",
-                 RU: "По участникам"},
-    BY_WEALTH: {EN: "By wealth",
-                RU: "По богатству"},
-    DICEARGS: {EN: "dice",
-               RU: "игральные-кубики"}
+    ROLLDICE_CMD_NAME:
+        {EN: "roll-dice",
+         RU: "кинуть-игральные-кости"},
+    ROLLDICE_CMD_DESC:
+        {EN: "Randomizer",
+         RU: "Рандомайзер"},
+    TOO_MANY_DICE:
+        {EN: "Too many dice. Maximum is 10",
+         RU: "Слишком много игральных костей. Максимум - 10"},
+    NOTHING_TO_ROLL:
+        {EN: "Nothing to roll",
+         RU: "Нечего кидать"},  #
+    SORT:
+        {EN: "sort",
+         RU: "сортировать"},
+    BY_MEMBERS:
+        {EN: "By members",
+         RU: "По участникам"},
+    BY_WEALTH:
+        {EN: "By wealth",
+         RU: "По богатству"},
+    DICEARGS:
+        {EN: "dice",
+         RU: "игральные-кубики"},
+    FUN_FUCKT_IGNORE_NAME:
+        {EN: "fun-fact-ignore",
+         RU: "забавный-факт-игнорирование"},
+    FUN_FUCKT_IGNORE_DESC:
+        {EN: "If you want to disturb the bot by accidentally saying the word \"fact\"",
+         RU: "Если вы хотите потревожить бота, случайно произнеся слово \"факт\""},
+    ADDME_TO_IGNORE:
+        {EN: "Add me to ignore list",
+         RU: "Добавь меня в список игнорирования"},
+    REMOVEME_FROM_IGNORE:
+        {EN: "Remove me from ignore list",
+         RU: "Убери меня из списка игнорирования"},
+    ADDED_TO_IGNORE:
+        {EN: "You have been added to the ignore list. Now the bot will not react to your word \"fact\"",
+         RU: "Вы были добавлены в список игнорирования. Теперь бот не будет реагировать на ваше слово \"факт\""},
+    REMOVED_FROM_IGNORED:
+        {EN: "You have been removed from the ignore list. Now the bot will react to your word \"fact\" again",
+         RU: "Вы были удалены из списка игнорирования. Теперь бот снова будет реагировать на ваше слово \"факт\""},
+    ALREADY_IGNORED:
+        {EN: "You are already on the ignore list for the word \"fact\"",
+         RU: "Вы уже находитесь в списке игнорирования на слово \"факт\""},
+    ALREADY_NONIGNORED:
+        {EN: "You are not on the ignore list for the word \"fact\"",
+         RU: "Вы не находитесь в списке игнорирования на слово \"факт\""},
+    ACTION:
+        {EN: "action",
+         RU: "действие"}
 }
 
 _T = T(locale_dict=_locale)
@@ -85,7 +110,7 @@ _T = T(locale_dict=_locale)
     extras={IS_BROKEN: False}
 )
 async def facts(interaction: discord.Interaction):
-    await interaction.response.defer()
+    await interaction.response.defer(ephemeral=True, thinking=True)
     _T.set_language(interaction.locale)
     if fact := await _F.read_facts(guild=interaction.guild, lang=_T.get_lang(interaction.locale.value)):
         await interaction.followup.send(fact)
@@ -94,15 +119,49 @@ async def facts(interaction: discord.Interaction):
 
 
 @app_commands.command(
+    name=namedesc(FUN_FUCKT_IGNORE_NAME, _locale),
+    description=namedesc(FUN_FUCKT_IGNORE_DESC, _locale),
+    extras={IS_BROKEN: False}
+)
+@app_commands.rename(action=namedesc(ACTION, _locale))
+@app_commands.choices(action=[
+    app_commands.Choice(name=namedesc(ADDME_TO_IGNORE, _locale), value=1),
+    app_commands.Choice(name=namedesc(REMOVEME_FROM_IGNORE, _locale), value=0),
+])
+async def facts_ignore(interaction: discord.Interaction, action: int):
+    await interaction.response.defer(ephemeral=True, thinking=True)
+    _T.set_language(interaction.locale)
+    ignore = await DB.execute("SELECT funfact_ignore FROM users WHERE id = ?;", (interaction.user.id,), True)
+    ignore = ignore[0]
+    if ignore == action == 0:
+        await interaction.followup.send(_T.stranslate(_ls(ALREADY_NONIGNORED)), ephemeral=True)
+        return
+    elif ignore == action == 1:
+        await interaction.followup.send(_T.stranslate(_ls(ALREADY_IGNORED)), ephemeral=True)
+        return
+    elif ignore != action:
+        await DB.execute("UPDATE users SET funfact_ignore = ? WHERE id = ?;", (action, interaction.user.id))
+        if action == 0:
+            await interaction.followup.send(_T.stranslate(_ls(REMOVED_FROM_IGNORED)), ephemeral=True)
+            return
+        elif action == 1:
+            await interaction.followup.send(_T.stranslate(_ls(ADDED_TO_IGNORE)), ephemeral=True)
+            return
+    await interaction.followup.send("null", ephemeral=True)
+    interaction.client.logger.error(f"Пользователь {interaction.user.name} вводит неизвестное значение в поле action => {action}.")
+    return
+
+
+@app_commands.command(
     name=namedesc(CULTS_CMD_NAME, _locale),
     description=namedesc(CULTS_CMD_DESC, _locale)
 )
-@app_commands.rename(sort_by=namedesc(SORT, _locale))
-@app_commands.choices(sort_by=[
+@app_commands.rename(sortby=namedesc(SORT, _locale))
+@app_commands.choices(sortby=[
     app_commands.Choice(name=namedesc(BY_MEMBERS, _locale), value=0),
     app_commands.Choice(name=namedesc(BY_WEALTH, _locale), value=1)])
-async def cults(interaction: discord.Interaction, sort_by: app_commands.Choice[int] = 0):
-    await interaction.response.defer()
+async def cults(interaction: discord.Interaction, sortby: app_commands.Choice[int] = 0):
+    await interaction.response.defer(ephemeral=True, thinking=True)
     _T.set_language(interaction.locale)
     clist = {}
     cmoney = {}
@@ -143,7 +202,7 @@ async def cults(interaction: discord.Interaction, sort_by: app_commands.Choice[i
                     clist[str.lower(member.global_name[s:e])] += 1
                 else:
                     clist[str.lower(member.global_name[s:e])] = 1
-    if sort_by == 1:
+    if sortby == 1:
         cults_tuple = dict(coll.Counter(cmoney).most_common(10))
     else:
         cults_tuple = dict(coll.Counter(clist).most_common(10))
@@ -184,7 +243,7 @@ async def cults(interaction: discord.Interaction, sort_by: app_commands.Choice[i
 )
 @app_commands.rename(dice_args=namedesc(DICEARGS, _locale))
 async def rolldice(interaction: discord.Interaction, *, dice_args: str):
-    await interaction.response.defer()
+    await interaction.response.defer(ephemeral=True, thinking=True)
     _T.set_language(interaction.locale)
     results = {}
     dices = re.findall(r'(\d*)([dк])(\d+)([+-\\*/]?)(\d+)?', dice_args)
