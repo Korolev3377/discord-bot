@@ -104,6 +104,36 @@ MODAL_TITLE = "modal_title"
 DELETE = "delete"
 EDIT = "edit"
 
+# REGULAR
+
+
+FACT_CMD_NAME = "fact_cmd_name"
+FACT_CMD_DESC = "fact_cmd_desc"
+NO_FACTS_IN_DB = "no_facts_in_db"
+
+CULTS_CMD_NAME = "cults_cmd_name"
+CULTS_CMD_DESC = "cults_cmd_desc"
+TOP_CULTS = "top_cults"
+MEMBERS_IN_CULT = "members_in_cult"
+NO_CULTS = "no_cults"
+BY_WEALTH = "by_wealth"
+BY_MEMBERS = "by_members"
+SORT = "sort"
+DICEARGS = "diceargs"
+ROLLDICE_CMD_NAME = "rolldice_cmd_name"
+ROLLDICE_CMD_DESC = "rolldice_cmd_desc"
+TOO_MANY_DICE = "too_many_dice"
+NOTHING_TO_ROLL = "nothing_to_roll"
+FUN_FUCKT_IGNORE_NAME = "n_fil"
+FUN_FUCKT_IGNORE_DESC = "d_fil"
+ADDME_TO_IGNORE = "amti"
+REMOVEME_FROM_IGNORE = "rmfi"
+ADDED_TO_IGNORE = "ati"
+REMOVED_FROM_IGNORED = "rfi"
+ALREADY_IGNORED = "aig"
+ALREADY_NONIGNORED = "anig"
+ACTION = "act"
+
 # FUN
 
 FUN_GROUP_NAME = "fungrp"
