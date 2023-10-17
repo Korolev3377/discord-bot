@@ -58,6 +58,9 @@ if __name__ == '__main__':
             # Это главный цикл бота. В нем идет пассивное уменьшение КД и проверка на то,
             # когда нужно будет менять Синего ника. Если вообще нужно будет.
 
+            self.sys_var = 0  # Используется для быстрой смены ботов.
+            # Предположим у меня есть бот, в котором я не хочу видеть некоторых функций. В коде я эти функции вырезаю за уловие с этим значением.
+
         async def setup_hook(self):
             self.tree.interaction_check = itr_check  # Проверка на возможность выполнения команд
             self.tree.on_error = on_error_handler  # Заглушка для ошибок
@@ -194,7 +197,10 @@ if __name__ == '__main__':
     @BOT.event
     async def on_message(message):
         if message.guild:
-            if message.author == BOT.user or message.author.bot or message.guild.get_member(872406824765251594):
+            if message.author == BOT.user or message.author.bot:
+                return
+
+            if message.guild.get_member(872406824765251594) and BOT.sys_var == 0:
                 return
 
             msg = message.content.lower()
