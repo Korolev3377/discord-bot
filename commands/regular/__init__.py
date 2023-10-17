@@ -198,8 +198,8 @@ async def cults(interaction: discord.Interaction, sortby: app_commands.Choice[in
                 else:
                     clist[str.lower(member.nick[s:e])] = 1
         else:
-            s = str.find(member.global_name, '[') + 1
-            e = str.find(member.global_name, ']')
+            s = str.find(member.name, '[') + 1
+            e = str.find(member.name, ']')
             if s != -1 and e != -1:
                 dat = await DB.execute("SELECT wealth FROM users WHERE id = ?;",
                                        (member.id,))
