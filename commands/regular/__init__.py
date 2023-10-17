@@ -70,11 +70,11 @@ _locale = {
         {EN: "dice",
          RU: "игральные-кубики"},
     FUN_FUCKT_IGNORE_NAME:
-        {EN: "fun-fact-ignore",
-         RU: "забавный-факт-игнорирование"},
+        {EN: "fun-fact-ignore-list",
+         RU: "забавный-факт-список-игнорирования"},
     FUN_FUCKT_IGNORE_DESC:
-        {EN: "If you want to disturb the bot by accidentally saying the word \"fact\"",
-         RU: "Если вы хотите потревожить бота, случайно произнеся слово \"факт\""},
+        {EN: "If you don't want to disturb the bot by accidentally saying the word \"fact\"",
+         RU: "Если вы не хотите потревожить бота, случайно произнеся слово \"факт\""},
     ADDME_TO_IGNORE:
         {EN: "Add me to ignore list",
          RU: "Добавь меня в список игнорирования"},
