@@ -5,6 +5,9 @@ import time
 import logging
 import pickle as pik
 
+import atexit
+import signal
+
 import discord
 from discord.ext import commands
 from discord.app_commands import locale_str as _ls
@@ -58,8 +61,9 @@ if __name__ == '__main__':
             # Это главный цикл бота. В нем идет пассивное уменьшение КД и проверка на то,
             # когда нужно будет менять Синего ника. Если вообще нужно будет.
 
-            self.sys_var = 0  # Используется для быстрой смены ботов.
-            # Предположим у меня есть бот, в котором я не хочу видеть некоторых функций. В коде я эти функции вырезаю за уловие с этим значением.
+            self.sys_var = 1  # Используется для быстрой смены ботов.
+            # Предположим у меня есть бот, в котором я не хочу видеть некоторых функций. В коде я эти функции вырезаю уловием с этим значением.
+            # Не зря у меня имя - Костылев.
 
         async def setup_hook(self):
             self.tree.interaction_check = itr_check  # Проверка на возможность выполнения команд
@@ -70,7 +74,8 @@ if __name__ == '__main__':
             for i in (BotsayView,):  # Запуск постоянных View
                 self.add_view(i())
             async for g in self.fetch_guilds():  # Загрузка кофига серверов.
-                await DB.execute("CREATE TABLE if not exists servers_config (server_id INTEGER NOT NULL UNIQUE, cfg_data);")
+                await DB.execute(
+                    "CREATE TABLE if not exists servers_config (server_id INTEGER NOT NULL UNIQUE, cfg_data);")
                 data = await DB.execute("SELECT cfg_data FROM servers_config WHERE server_id IS ?;", (g.id,))
                 try:
                     assert data[0]
@@ -100,7 +105,7 @@ if __name__ == '__main__':
 
 
     BOT = Bot()
-    _F = Facts()
+    _F = Facts(BOT.logger)
     _T = T()
 
 
@@ -178,6 +183,11 @@ if __name__ == '__main__':
     @BOT.event
     async def on_ready():
         BOT.logger.info(f"Бот запущен! Имя: {BOT.user} ИД: {BOT.user.id}")
+
+        @atexit.register
+        def bot_exit_handler():
+            BOT.logger.critical(f"Бот остановлен! Имя: {BOT.user} ИД: {BOT.user.id}")
+
         if translate_not_found := BOT.tree.translator.translate_not_found:
             BOT.logger.error(f"Перевод не найден для: {translate_not_found}")
         if not BOT.heart.beat.is_running():
@@ -205,7 +215,8 @@ if __name__ == '__main__':
 
             msg = message.content.lower()
 
-            await DB.execute("CREATE TABLE if not exists funfact_ignore (id INTEGER NOT NULL, value INTEGER DEFAULT (0));")
+            await DB.execute(
+                "CREATE TABLE if not exists funfact_ignore (id INTEGER NOT NULL, value INTEGER DEFAULT (0));")
             ignore = await DB.execute("SELECT value FROM funfact_ignore WHERE id = ?;", (message.author.id,))
             if ignore is False:
                 await DB.execute("INSERT INTO funfact_ignore (id, value) VALUES (?, ?);", (message.author.id, 0))

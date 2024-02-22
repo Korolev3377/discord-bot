@@ -103,9 +103,11 @@ MODAL_TEXT_LABEL = "modal_text_label"
 MODAL_TITLE = "modal_title"
 DELETE = "delete"
 EDIT = "edit"
+BOT_TERM_NAME = "bot_shutdown_name"
+BOT_TERM_DESC = "bot_shutdown_desc"
+SHUTING_DOWN = "bot_shutdown_answer"
 
 # REGULAR
-
 
 FACT_CMD_NAME = "fact_cmd_name"
 FACT_CMD_DESC = "fact_cmd_desc"
@@ -133,6 +135,9 @@ REMOVED_FROM_IGNORED = "rfi"
 ALREADY_IGNORED = "aig"
 ALREADY_NONIGNORED = "anig"
 ACTION = "act"
+FACTS_COUNT_NAME = "fcn"
+FACTS_COUNT_DESC = "fcd"
+FACTS_COUNT = "fc"
 
 # FUN
 

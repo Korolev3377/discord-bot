@@ -1,3 +1,5 @@
+import sys
+
 import discord
 import pickle as pik
 
@@ -41,7 +43,13 @@ _locale: dict = {
     "stock": {EN: "stock",
               RU: "количество"},
     "visible": {EN: "visible",
-                RU: "видимость"}
+                RU: "видимость"},
+    BOT_TERM_NAME: {EN: "shutdown-bot",
+                    RU: "выключить-бота"},
+    BOT_TERM_DESC: {EN: "Shutdwon bot",
+                    RU: "Запустить процедуру отключения бота"},
+    SHUTING_DOWN: {EN: "Shuting down...",
+                   RU: "Прощай, жестокий мир..."}
 }
 
 _T = T(locale_dict=_locale)
@@ -78,9 +86,18 @@ async def botsay(interaction: discord.Interaction, msg: str, chnl: str = None):
         "language": interaction.locale.value
     }
 
-    await DB.insert_message_data(message_id=control_message.id, message_data=pik.dumps(data))
 
-    await interaction.delete_original_response()
+@admingrp.command(
+    name=namedesc(BOT_TERM_NAME, _locale),
+    description=namedesc(BOT_TERM_DESC, _locale)
+)
+async def bottermcmd(interaction: discord.Interaction):
+    await interaction.response.defer(ephemeral=True, thinking=True)
+    _T.set_language(language=interaction.locale)
+    _T.set_string(string=_ls(SHUTING_DOWN))
+    await interaction.followup.send(_T.stranslate())
+    interaction.client.logger.critical(f"Пользователь {interaction.user.name} ({interaction.user.id}) запустил команду отключения бота!")
+    sys.exit(0)
 
 
 class BotsayView(discord.ui.View):

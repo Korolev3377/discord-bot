@@ -3,7 +3,10 @@ import re
 
 
 class Facts:
-    async def read_facts(self, guild, lang):
+    def __init__(self, logger):
+        self.logger = logger
+
+    async def read_facts(self, guild, lang, get_count=False):
         try:
             for channel in guild.channels:
                 if channel.name == "nrc":
@@ -13,14 +16,20 @@ class Facts:
                             await attach.save(str.lower(attach.filename))
                         if lang == "ru":
                             with open('facts_ru.txt', 'r', encoding='utf-8') as file:
-                                return random.choice(str.split(file.read(), '\n'))
+                                if get_count:
+                                    return len(str.split(file.read(), '\n'))
+                                else:
+                                    return random.choice(str.split(file.read(), '\n'))
                         elif lang == "en":
                             with open('facts_en.txt', 'r', encoding='utf-8') as file:
-                                return random.choice(str.split(file.read(), '\n'))
+                                if get_count:
+                                    return len(str.split(file.read(), '\n'))
+                                else:
+                                    return random.choice(str.split(file.read(), '\n'))
                     else:
                         await message.add_reaction('⚠️')
         except:
-            print(f'Проблемы с чтением фактов!')
+            self.logger.error(f'Проблемы с чтением фактов!')
 
     def find_fact(self, msg):
         english = re.findall(r'\bfact(s)?\W*\b', msg)

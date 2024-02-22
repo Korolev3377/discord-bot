@@ -11,8 +11,6 @@ from environment.variable import *
 from environment.facts import Facts
 from commands.database import DB
 
-_F = Facts()
-
 
 def capitalize_words(string):
     return str.join(' ', [word.capitalize() for word in string.split(' ')])
@@ -40,7 +38,7 @@ _locale = {
          RU: "Топ культов"},
     MEMBERS_IN_CULT:
         {EN: "Members: {_} - Wealth: {_1}.",
-         RU: "Участников: {_} - Богатство: {_1}."},  #
+         RU: "Участников: {_} - Богатство: {_1}."},
     NO_CULTS:
         {EN: "Sorry, no cults on this server.",
          RU: "Извините, на этом сервере нет культов."},
@@ -95,13 +93,19 @@ _locale = {
          RU: "Вы не находитесь в списке игнорирования на слово \"факт\""},
     ACTION:
         {EN: "action",
-         RU: "действие"}
+         RU: "действие"},
+    FACTS_COUNT_NAME:
+        {EN: "fun-fact-count",
+         RU: "забавный-факт-количество"},
+    FACTS_COUNT_DESC:
+        {EN: "Show how many fun facts in my database.",
+         RU: "Показать количество забавных фактов в моей базе данных."},
+    FACTS_COUNT:
+        {EN: "I have {_} fun facts in my database. Impressive, I know.",
+         RU: "В моей базе данных {_} забавных фактов. Впечатляюще, я знаю."}
 }
 
 _T = T(locale_dict=_locale)
-
-
-# _F = Facts()
 
 
 @app_commands.command(
@@ -112,8 +116,33 @@ _T = T(locale_dict=_locale)
 async def facts(interaction: discord.Interaction):
     await interaction.response.defer(ephemeral=True, thinking=True)
     _T.set_language(interaction.locale)
+    _F = Facts(logger=interaction.client.logger)
     if fact := await _F.read_facts(guild=interaction.guild, lang=_T.get_lang(interaction.locale.value)):
         await interaction.followup.send(fact)
+    else:
+        await interaction.followup.send(_T.stranslate(_ls(NO_FACTS_IN_DB)))
+
+
+@app_commands.command(
+    name=namedesc(FACTS_COUNT_NAME, _locale),
+    description=namedesc(FACTS_COUNT_DESC, _locale),
+    extras={IS_BROKEN: False}
+)
+async def facts_count(interaction: discord.Interaction):
+    await interaction.response.defer(ephemeral=True, thinking=True)
+    _T.set_language(interaction.locale)
+    _F = Facts(logger=interaction.client.logger)
+    if count := await _F.read_facts(guild=interaction.guild, lang=_T.get_lang(interaction.locale.value), get_count=True):
+        await interaction.followup.send(
+            _T.stranslate(
+                _ls(
+                    FACTS_COUNT,
+                    extras={
+                        FORMAT: {"_": count}
+                    }
+                )
+            )
+        )
     else:
         await interaction.followup.send(_T.stranslate(_ls(NO_FACTS_IN_DB)))
 
