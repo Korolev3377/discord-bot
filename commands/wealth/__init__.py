@@ -94,18 +94,21 @@ wealthgrp = create_group(WEALTH_GRP_NAME, WEALTH_GRP_DESC, _locale)
 
 def i_hate_russian_lang(interaction, val):
     try:
-        interaction.client.guilds_data.get(str(interaction.guild_id))
+        assert interaction.client.guilds_data.get(str(interaction.guild_id))
     except:
         interaction.client.logger.error(f"Ошибка в конфигурации сервера \"{interaction.guild.name}\": Нету конфигурации для сервера.")
+        return
         # В обычном случае эта ошибка не выйдет.
     try:
-        interaction.client.guilds_data.get(str(interaction.guild_id)).get('wealth_name')
+        assert interaction.client.guilds_data.get(str(interaction.guild_id)).get('wealth_name')
     except:
         interaction.client.logger.error(f"Ошибка в конфигурации сервера \"{interaction.guild.name}\": wealth_name не найден в конфигурации сервера.")
+        return
     try:
-        interaction.client.guilds_data.get(str(interaction.guild_id)).get('wealth_name').get(_T.get_lang(interaction.locale.value))
+        assert interaction.client.guilds_data.get(str(interaction.guild_id)).get('wealth_name').get(_T.get_lang(interaction.locale.value))
     except:
         interaction.client.logger.error(f"Ошибка в конфигурации сервера \"{interaction.guild.name}\": В wealth_name не обнаружены en и ru значения!")
+        return
     return MORPH_RU.parse(_T.stranslate(ls(WEALTH_T, {'wealth_name': interaction.client.guilds_data.get(str(interaction.guild_id)).get('wealth_name').get(_T.get_lang(interaction.locale.value))})))[0].make_agree_with_number(val).word
 
 
@@ -220,11 +223,11 @@ async def trasfercmd(interaction: discord.Interaction, user2_id: str, value: app
 
 @trasfercmd.autocomplete("user2_id")
 async def db_users_autocomplite(interaction: discord.Interaction, current: str):
-    data = await DB.execute("SELECT servid_userid, name FROM users WHERE is_visible = 1;", fetchone=False)
+    data = await DB.execute(f"SELECT servid_userid, name FROM users WHERE is_visible = 1;", fetchone=False)
     ac = []
     for _ in data:
-        user_id = _[0].split("_")[1]
-        if current in _[1] and interaction.guild.get_member(int(user_id)):
+        guild_id, user_id = _[0].split("_")
+        if current in _[1] and interaction.guild.get_member(int(user_id)) and interaction.guild_id == int(guild_id):
             ac.append(app_commands.Choice(name=str(_[1]), value=user_id))
     return ac[:25]
 
@@ -253,11 +256,11 @@ async def balanceopacmd(interaction: discord.Interaction, user_id: str, create: 
 
 @balanceopacmd.autocomplete("user_id")
 async def db_users_autocomplite(interaction: discord.Interaction, current: str):
-    data = await DB.execute("SELECT servid_userid, name FROM users WHERE is_visible = 1;", fetchone=False)
+    data = await DB.execute(f"SELECT servid_userid, name FROM users;", fetchone=False)
     ac = []
     for _ in data:
-        user_id = _[0].split("_")[1]
-        if current in _[1] and interaction.guild.get_member(int(user_id)):
+        guild_id, user_id = _[0].split("_")
+        if current in _[1] and interaction.guild.get_member(int(user_id)) and interaction.guild_id == int(guild_id):
             ac.append(app_commands.Choice(name=str(_[1]), value=user_id))
     return ac[:25]
 
@@ -343,21 +346,21 @@ async def trasferopacmd(interaction: discord.Interaction, user1_id: str, user2_i
 
 @trasferopacmd.autocomplete("user1_id")
 async def db_users_autocomplite(interaction: discord.Interaction, current: str):
-    data = await DB.execute("SELECT servid_userid, name FROM users WHERE is_visible = 1;", fetchone=False)
+    data = await DB.execute(f"SELECT servid_userid, name FROM users;", fetchone=False)
     ac = []
     for _ in data:
-        user_id = _[0].split("_")[1]
-        if current in _[1] and interaction.guild.get_member(int(user_id)):
+        guild_id, user_id = _[0].split("_")
+        if current in _[1] and interaction.guild.get_member(int(user_id)) and interaction.guild_id == int(guild_id):
             ac.append(app_commands.Choice(name=str(_[1]), value=user_id))
     return ac[:25]
 
 
 @trasferopacmd.autocomplete("user2_id")
 async def db_users_autocomplite(interaction: discord.Interaction, current: str):
-    data = await DB.execute("SELECT servid_userid, name FROM users WHERE is_visible = 1;", fetchone=False)
+    data = await DB.execute(f"SELECT servid_userid, name FROM users;", fetchone=False)
     ac = []
     for _ in data:
-        user_id = _[0].split("_")[1]
-        if current in _[1] and interaction.guild.get_member(int(user_id)):
+        guild_id, user_id = _[0].split("_")
+        if current in _[1] and interaction.guild.get_member(int(user_id)) and interaction.guild_id == int(guild_id):
             ac.append(app_commands.Choice(name=str(_[1]), value=user_id))
     return ac[:25]
