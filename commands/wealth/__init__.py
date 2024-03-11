@@ -45,7 +45,7 @@ _locale = {
     TRANSFER_ERROR: {EN: "Korolev nakodil govna.", RU: "Korolev накодил говна."}, VALUE: {EN: "amouth", RU: "сколько"},
     TARGET: {EN: "target", RU: "кому"},
     USER: {EN: "user", RU: "пользователь"},
-    WEALTH_T: {EN: WEALTH_NAME_EN, RU: WEALTH_NAME_RU},
+    WEALTH_T: {EN: "{wealth_name}", RU: "{wealth_name}"},
     NO_USER_OPA: {EN: "User not in BD.",
                   RU: "Пользователя нет в базе данных."},
     BALANCE_CHANGED: {
@@ -92,12 +92,29 @@ _T = T(locale_dict=_locale)
 wealthgrp = create_group(WEALTH_GRP_NAME, WEALTH_GRP_DESC, _locale)
 
 
+def i_hate_russian_lang(interaction, val):
+    try:
+        interaction.client.guilds_data.get(str(interaction.guild_id))
+    except:
+        interaction.client.logger.error(f"Ошибка в конфигурации сервера \"{interaction.guild.name}\": Нету конфигурации для сервера.")
+        # В обычном случае эта ошибка не выйдет.
+    try:
+        interaction.client.guilds_data.get(str(interaction.guild_id)).get('wealth_name')
+    except:
+        interaction.client.logger.error(f"Ошибка в конфигурации сервера \"{interaction.guild.name}\": wealth_name не найден в конфигурации сервера.")
+    try:
+        interaction.client.guilds_data.get(str(interaction.guild_id)).get('wealth_name').get(_T.get_lang(interaction.locale.value))
+    except:
+        interaction.client.logger.error(f"Ошибка в конфигурации сервера \"{interaction.guild.name}\": В wealth_name не обнаружены en и ru значения!")
+    return MORPH_RU.parse(_T.stranslate(ls(WEALTH_T, {'wealth_name': interaction.client.guilds_data.get(str(interaction.guild_id)).get('wealth_name').get(_T.get_lang(interaction.locale.value))})))[0].make_agree_with_number(val).word
+
+
 @wealthgrp.command(name=namedesc(BALANCE_NAME, _locale), description=namedesc(BALANCE_DESC, _locale))
 async def balancecmd(interaction: discord.Interaction):
     await interaction.response.defer(thinking=True, ephemeral=True)
     _T.set_language(language=interaction.locale)
     await DB.execute("""CREATE TABLE if not exists users (
-    id INTEGER UNIQUE NOT NULL,
+    servid_userid INTEGER UNIQUE NOT NULL,
     name STRING  NOT NULL,
     wealth INTEGER DEFAULT (0),
     score INTEGER DEFAULT (0),
@@ -105,23 +122,25 @@ async def balancecmd(interaction: discord.Interaction):
     funfact_ignore INTEGER DEFAULT (0),
     is_visible INTEGER DEFAULT (1) 
     );""")
-    i = await DB.execute("SELECT id, wealth FROM users WHERE id = ?;", (interaction.user.id,))
+    i = await DB.execute("SELECT servid_userid, wealth FROM users WHERE servid_userid = ?;", (f"{interaction.guild_id}_{interaction.user.id}",))
     if i:
-        await DB.execute("UPDATE users SET name = ? WHERE id = ?;", (interaction.user.name, i[0]))
+        await DB.execute("UPDATE users SET name = ? WHERE servid_userid = ?;", (interaction.user.name, i[0]))
         message = ls(
             GETBALANCE,
-            {VALUE: f"{i[1]} {MORPH_RU.parse(_T.stranslate(_ls(WEALTH_T)))[0].make_agree_with_number(i[1]).word}"})
+            {VALUE: f"{i[1]} {i_hate_russian_lang(interaction, i[1])}"})
     else:
         await DB.execute(
-            "INSERT INTO users (id, name, language) VALUES (?, ?, ?);",
-            (interaction.user.id, interaction.user.name, interaction.locale.value))
+            "INSERT INTO users (servid_userid, name, language) VALUES (?, ?, ?);",
+            (f"{interaction.guild_id}_{interaction.user.id}", interaction.user.name, interaction.locale.value))
         message = ls(USER_CREATED)
     await interaction.followup.send(_T.stranslate(message))
 
 
 @wealthgrp.command(name=namedesc(TRANSFER_NAME, _locale), description=namedesc(TRANSFER_DESC, _locale))
-@app_commands.rename(user2_id=namedesc(TARGET, _locale), value=namedesc(VALUE, _locale), message=namedesc(MSG_TO_USER, _locale))
-async def trasfercmd(interaction: discord.Interaction, user2_id: str, value: app_commands.Range[int, 1], message: str = None):
+@app_commands.rename(user2_id=namedesc(TARGET, _locale), value=namedesc(VALUE, _locale),
+                     message=namedesc(MSG_TO_USER, _locale))
+async def trasfercmd(interaction: discord.Interaction, user2_id: str, value: app_commands.Range[int, 1],
+                     message: str = None):
     await interaction.response.defer(thinking=True, ephemeral=True)
 
     _T.set_language(language=interaction.locale)  # Устанавливаем язык переводчика
@@ -139,10 +158,10 @@ async def trasfercmd(interaction: discord.Interaction, user2_id: str, value: app
     if interaction.user.id == user2_id:
         interaction.client.logger.debug(f"Пользователь {interaction.user.name} пробует перевести лоты себе самому.")
 
-    user1 = await DB.execute("SELECT name, wealth, language FROM users WHERE id = ?;", (interaction.user.id,))
+    user1 = await DB.execute("SELECT name, wealth, language FROM users WHERE servid_userid = ?;", (f"{interaction.guild_id}_{interaction.user.id}",))
     # Получение имени и количество лотов пользователя 1
 
-    user2 = await DB.execute("SELECT name, wealth, language FROM users WHERE id = ?;", (user2_id,))
+    user2 = await DB.execute("SELECT name, wealth, language FROM users WHERE servid_userid = ?;", (f"{interaction.guild_id}_{user2_id}",))
     # Получение имени и количество лотов пользователя 2
 
     if not user1:
@@ -154,15 +173,15 @@ async def trasfercmd(interaction: discord.Interaction, user2_id: str, value: app
     elif user1[1] - value < 0:
         stdout = ls(
             NOT_ENOUGH_MONEY, {
-                WEALTH: f"{user1[1]} {MORPH_RU.parse(_T.stranslate(_ls(WEALTH_T)))[0].make_agree_with_number(user1[1]).word}",
-                VALUE: f"{value} {MORPH_RU.parse(_T.stranslate(_ls(WEALTH_T)))[0].make_agree_with_number(value).word}"})
+                WEALTH: f"{user1[1]} {i_hate_russian_lang(interaction, user1[1])}",
+                VALUE: f"{value} {i_hate_russian_lang(interaction, value)}"})
     else:
-        await DB.execute("UPDATE users SET wealth = ? WHERE id = ?;", (user1[1] - value, interaction.user.id))
-        user2 = await DB.execute("SELECT name, wealth, language FROM users WHERE id = ?;", (user2_id,))
-        await DB.execute("UPDATE users SET wealth = ? WHERE id = ?;", (user2[1] + value, user2_id))
+        await DB.execute("UPDATE users SET wealth = ? WHERE servid_userid = ?;", (user1[1] - value, f"{interaction.guild_id}_{interaction.user.id}"))
+        user2 = await DB.execute("SELECT name, wealth, language FROM users WHERE servid_userid = ?;", (f"{interaction.guild_id}_{user2_id}",))
+        await DB.execute("UPDATE users SET wealth = ? WHERE servid_userid = ?;", (user2[1] + value, f"{interaction.guild_id}_{user2_id}"))
         stdout = ls(
             TRANSFFERED, {
-                WEALTH: f"{value} {MORPH_RU.parse(_T.stranslate(_ls(WEALTH_T)))[0].make_agree_with_number(value).word}",
+                WEALTH: f"{value} {i_hate_russian_lang(interaction, value)}",
                 USER_2: user2[0]})
         success = True
 
@@ -171,10 +190,10 @@ async def trasfercmd(interaction: discord.Interaction, user2_id: str, value: app
     if success:
         stdout = ls(
             BALANCE_CHANGED + "0", {
-                "old_value": f"{user1[1]} {MORPH_RU.parse(_T.stranslate(_ls(WEALTH_T), user1[2]))[0].make_agree_with_number(user1[1]).word}",
-                "new_value": f"{user1[1] - value} {MORPH_RU.parse(_T.stranslate(_ls(WEALTH_T), user1[2]))[0].make_agree_with_number(user1[1] - value).word}",
+                "old_value": f"{user1[1]} {i_hate_russian_lang(interaction, user1[1])}",
+                "new_value": f"{user1[1] - value} {i_hate_russian_lang(interaction, user1[1] - value)}",
                 USER: user2[0],
-                VALUE: f"{value} {MORPH_RU.parse(_T.stranslate(_ls(WEALTH_T), user1[2]))[0].make_agree_with_number(value).word}"})
+                VALUE: f"{value} {i_hate_russian_lang(interaction, value)}"})
         text_out = [_T.stranslate(stdout, user1[2])]
         if message:
             text_out.append(_T.stranslate(_ls(MSG)))
@@ -185,10 +204,10 @@ async def trasfercmd(interaction: discord.Interaction, user2_id: str, value: app
             await interaction.followup.send(_T.stranslate(ls(NOT_DELIVERED, {USER: user1[0]})), ephemeral=True)
         stdout = ls(
             BALANCE_CHANGED + "1", {
-                "old_value": f"{user2[1]} {MORPH_RU.parse(_T.stranslate(_ls(WEALTH_T), user2[2]))[0].make_agree_with_number(user2[1]).word}",
-                "new_value": f"{user2[1] + value} {MORPH_RU.parse(_T.stranslate(_ls(WEALTH_T), user2[2]))[0].make_agree_with_number(user2[1] + value).word}",
+                "old_value": f"{user2[1]} {i_hate_russian_lang(interaction, user2[1])}",
+                "new_value": f"{user2[1] + value} {i_hate_russian_lang(interaction, user2[1] + value)}",
                 USER: user1[0],
-                VALUE: f"{value} {MORPH_RU.parse(_T.stranslate(_ls(WEALTH_T), user2[2]))[0].make_agree_with_number(value).word}"})
+                VALUE: f"{value} {i_hate_russian_lang(interaction, value)}"})
         text_out = [_T.stranslate(stdout, user1[2])]
         if message:
             text_out.append(_T.stranslate(_ls(MSG)))
@@ -201,11 +220,12 @@ async def trasfercmd(interaction: discord.Interaction, user2_id: str, value: app
 
 @trasfercmd.autocomplete("user2_id")
 async def db_users_autocomplite(interaction: discord.Interaction, current: str):
-    data = await DB.execute("SELECT id, name FROM users WHERE is_visible = 1;", fetchone=False)
+    data = await DB.execute("SELECT servid_userid, name FROM users WHERE is_visible = 1;", fetchone=False)
     ac = []
     for _ in data:
-        if current in _[1] and interaction.guild.get_member(int(_[0])):
-            ac.append(app_commands.Choice(name=str(_[1]), value=str(_[0])))
+        user_id = _[0].split("_")[1]
+        if current in _[1] and interaction.guild.get_member(int(user_id)):
+            ac.append(app_commands.Choice(name=str(_[1]), value=user_id))
     return ac[:25]
 
 
@@ -214,16 +234,17 @@ wealthopagrp.default_permissions = discord.Permissions.none()
 
 
 @app_commands.rename(user_id=namedesc(USER, _locale))
-@wealthopagrp.command(name=namedesc(BALANCE_OPA_NAME, _locale), description=namedesc(BALANCE_OPA_DESC, _locale), extras={IS_OWNER_ONLY: True})
+@wealthopagrp.command(name=namedesc(BALANCE_OPA_NAME, _locale), description=namedesc(BALANCE_OPA_DESC, _locale),
+                      extras={IS_OWNER_ONLY: True})
 async def balanceopacmd(interaction: discord.Interaction, user_id: str, create: bool = False):
     await interaction.response.defer(thinking=True, ephemeral=True)
     _T.set_language(language=interaction.locale)
-    i = await DB.execute("SELECT name, wealth FROM users WHERE id = ?;", (int(user_id),))
+    i = await DB.execute("SELECT name, wealth FROM users WHERE servid_userid = ?;", (f"{interaction.guild_id}_{user_id}",))
     if i:
         message = ls(
             GETBALANCE, {
                 USER: i[0],
-                VALUE: f"{i[1]} {MORPH_RU.parse(_T.stranslate(_ls(WEALTH_T)))[0].make_agree_with_number(i[1]).word}"})
+                VALUE: f"{i[1]} {i_hate_russian_lang(interaction, i[1])}"})
         await interaction.followup.send((_T.stranslate(message) + _T.stranslate(ls(POV, {USER: i[0]}))))
     else:
         message = ls(NO_USER_OPA)
@@ -232,16 +253,19 @@ async def balanceopacmd(interaction: discord.Interaction, user_id: str, create: 
 
 @balanceopacmd.autocomplete("user_id")
 async def db_users_autocomplite(interaction: discord.Interaction, current: str):
-    data = await DB.execute("SELECT id, name FROM users WHERE is_visible = 1;", fetchone=False)
+    data = await DB.execute("SELECT servid_userid, name FROM users WHERE is_visible = 1;", fetchone=False)
     ac = []
     for _ in data:
-        if current in _[1] and interaction.guild.get_member(int(_[0])):
-            ac.append(app_commands.Choice(name=str(_[1]), value=str(_[0])))
+        user_id = _[0].split("_")[1]
+        if current in _[1] and interaction.guild.get_member(int(user_id)):
+            ac.append(app_commands.Choice(name=str(_[1]), value=user_id))
     return ac[:25]
 
 
-@wealthopagrp.command(name=namedesc(TRANSFER_OPA_NAME, _locale), description=namedesc(TRANSFER_OPA_DESC, _locale), extras={IS_OWNER_ONLY: True})
-@app_commands.rename(user1_id=namedesc(USER_FROM, _locale), user2_id=namedesc(USER_TO, _locale), value=namedesc(VALUE, _locale),
+@wealthopagrp.command(name=namedesc(TRANSFER_OPA_NAME, _locale), description=namedesc(TRANSFER_OPA_DESC, _locale),
+                      extras={IS_OWNER_ONLY: True})
+@app_commands.rename(user1_id=namedesc(USER_FROM, _locale), user2_id=namedesc(USER_TO, _locale),
+                     value=namedesc(VALUE, _locale),
                      alarm=namedesc(ALARM, _locale), text1=namedesc(TEXT1, _locale), text2=namedesc(TEXT2, _locale))
 async def trasferopacmd(interaction: discord.Interaction, user1_id: str, user2_id: str,
                         value: app_commands.Range[int, 1], alarm: bool = False, text1: str = None, text2: str = None):
@@ -259,10 +283,10 @@ async def trasferopacmd(interaction: discord.Interaction, user1_id: str, user2_i
         await interaction.followup.send(_T.stranslate(stdout))
         return
 
-    user1 = await DB.execute("SELECT name, wealth, language FROM users WHERE id = ?;", (user1_id,))
+    user1 = await DB.execute("SELECT name, wealth, language FROM users WHERE servid_userid = ?;", (f"{interaction.guild_id}_{user1_id}",))
     # Получение имени и количество лотов пользователя 1
 
-    user2 = await DB.execute("SELECT name, wealth, language FROM users WHERE id = ?;", (user2_id,))
+    user2 = await DB.execute("SELECT name, wealth, language FROM users WHERE servid_userid = ?;", (f"{interaction.guild_id}_{user2_id}",))
     # Получение имени и количество лотов пользователя 2
 
     if not user1:
@@ -274,17 +298,17 @@ async def trasferopacmd(interaction: discord.Interaction, user1_id: str, user2_i
     elif user1[1] - value < 0 if user1_id != 0 else False:
         stdout = ls(
             NOT_ENOUGH_MONEY, {
-                WEALTH: f"{user1[1]} {MORPH_RU.parse(_T.stranslate(_ls(WEALTH_T)))[0].make_agree_with_number(user1[1]).word}",
-                VALUE: f"{value} {MORPH_RU.parse(_T.stranslate(_ls(WEALTH_T)))[0].make_agree_with_number(value).word}"})
+                WEALTH: f"{user1[1]} {i_hate_russian_lang(interaction, user1[1])}",
+                VALUE: f"{value} {i_hate_russian_lang(interaction, value)}"})
     else:
         if user1_id != 0:
-            await DB.execute("UPDATE users SET wealth = ? WHERE id = ?;", (user1[1] - value, user1_id))
-        user2 = await DB.execute("SELECT name, wealth, language FROM users WHERE id = ?;", (user2_id,))
+            await DB.execute("UPDATE users SET wealth = ? WHERE servid_userid = ?;", (user1[1] - value, f"{interaction.guild_id}_{user1_id}"))
+        user2 = await DB.execute("SELECT name, wealth, language FROM users WHERE servid_userid = ?;", (f"{interaction.guild_id}_{user2_id}",))
         if user2_id != 0:
-            await DB.execute("UPDATE users SET wealth = ? WHERE id = ?;", (user2[1] + value, user2_id))
+            await DB.execute("UPDATE users SET wealth = ? WHERE servid_userid = ?;", (user2[1] + value, f"{interaction.guild_id}_{user2_id}"))
         stdout = ls(
             TRANSFFERED, {
-                WEALTH: f"{value} {MORPH_RU.parse(_T.stranslate(_ls(WEALTH_T)))[0].make_agree_with_number(value).word}",
+                WEALTH: f"{value} {i_hate_russian_lang(interaction, value)}",
                 USER_2: user2[0]})
         success = True
 
@@ -293,8 +317,8 @@ async def trasferopacmd(interaction: discord.Interaction, user1_id: str, user2_i
     if success and alarm:
         stdout = ls(
             BALANCE_CHANGED, {
-                "old_value": f"{user1[1]} {MORPH_RU.parse(_T.stranslate(_ls(WEALTH_T), user1[2]))[0].make_agree_with_number(user1[1]).word}",
-                "new_value": f"{user1[1] - value} {MORPH_RU.parse(_T.stranslate(_ls(WEALTH_T), user1[2]))[0].make_agree_with_number(user1[1] - value).word}"})
+                "old_value": f"{user1[1]} {i_hate_russian_lang(interaction, user1[1])}",
+                "new_value": f"{user1[1] - value} {i_hate_russian_lang(interaction, user1[1] - value)}"})
         text_out = [_T.stranslate(stdout, user1[2])]
         if text1:
             text_out.append("\n")
@@ -305,8 +329,8 @@ async def trasferopacmd(interaction: discord.Interaction, user1_id: str, user2_i
             await interaction.followup.send(_T.stranslate(ls(NOT_DELIVERED, {USER: user1[0]})), ephemeral=True)
         stdout = ls(
             BALANCE_CHANGED, {
-                "old_value": f"{user2[1]} {MORPH_RU.parse(_T.stranslate(_ls(WEALTH_T), user2[2]))[0].make_agree_with_number(user2[1]).word}",
-                "new_value": f"{user2[1] + value} {MORPH_RU.parse(_T.stranslate(_ls(WEALTH_T), user2[2]))[0].make_agree_with_number(user2[1] + value).word}"})
+                "old_value": f"{user2[1]} {i_hate_russian_lang(interaction, user2[1])}",
+                "new_value": f"{user2[1] + value} {i_hate_russian_lang(interaction, user2[1] + value)}"})
         text_out = [_T.stranslate(stdout, user2[2])]
         if text2:
             text_out.append("\n")
@@ -319,19 +343,21 @@ async def trasferopacmd(interaction: discord.Interaction, user1_id: str, user2_i
 
 @trasferopacmd.autocomplete("user1_id")
 async def db_users_autocomplite(interaction: discord.Interaction, current: str):
-    data = await DB.execute("SELECT id, name FROM users WHERE is_visible = 1;", fetchone=False)
+    data = await DB.execute("SELECT servid_userid, name FROM users WHERE is_visible = 1;", fetchone=False)
     ac = []
     for _ in data:
-        if current in _[1] and interaction.guild.get_member(int(_[0])):
-            ac.append(app_commands.Choice(name=str(_[1]), value=str(_[0])))
+        user_id = _[0].split("_")[1]
+        if current in _[1] and interaction.guild.get_member(int(user_id)):
+            ac.append(app_commands.Choice(name=str(_[1]), value=user_id))
     return ac[:25]
 
 
 @trasferopacmd.autocomplete("user2_id")
 async def db_users_autocomplite(interaction: discord.Interaction, current: str):
-    data = await DB.execute("SELECT id, name FROM users WHERE is_visible = 1;", fetchone=False)
+    data = await DB.execute("SELECT servid_userid, name FROM users WHERE is_visible = 1;", fetchone=False)
     ac = []
     for _ in data:
-        if current in _[1] and interaction.guild.get_member(int(_[0])):
-            ac.append(app_commands.Choice(name=str(_[1]), value=str(_[0])))
+        user_id = _[0].split("_")[1]
+        if current in _[1] and interaction.guild.get_member(int(user_id)):
+            ac.append(app_commands.Choice(name=str(_[1]), value=user_id))
     return ac[:25]
