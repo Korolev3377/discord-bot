@@ -82,12 +82,7 @@ if __name__ == '__main__':
                     assert data[0]
                     self.guilds_data[str(g.id)] = pik.loads(data[0])
                 except:
-                    data = {
-                        "key": {
-                            "variable": "value"
-                        }
-                    }
-                    self.guilds_data[str(g.id)] = data
+                    self.guilds_data[str(g.id)] = CONFIG.DEFAULT_CFG
                     await DB.execute("INSERT INTO servers_config (server_id, cfg_data) VALUES (?, ?);",
                                      (str(g.id), pik.dumps(self.guilds_data[str(g.id)])))
 
