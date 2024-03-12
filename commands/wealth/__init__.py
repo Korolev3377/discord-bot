@@ -16,8 +16,8 @@ MORPH_RU = pymorphy2.MorphAnalyzer(lang="ru")
 _locale = {
     GETBALANCE: {EN: "You have {value}.", RU: "У тебя есть {value}."},
     GETBALANCEOPA: {EN: "User \"{user}\" have {value}.", RU: "У пользователя \"{user}\" есть {value}."},
-    TRANSFER_NAME: {EN: "trasfer", RU: "перевод"}, TRANSFER_DESC: {
-        EN: f"Transfer your {WEALTH_NAME_EN} to outher user", RU: f"Дать {WEALTH_NAME_RU} другому пользователю."},
+    TRANSFER_NAME: {EN: "trasfer", RU: "перевод"},
+    TRANSFER_DESC: {EN: f"Transfer your currency to outher user", RU: f"Дать валюту другому пользователю."},
     WEALTH_GRP_NAME: {EN: "wallet", RU: "кошелек"},
     WEALTH_GRP_DESC: {EN: "You control your money.", RU: "Ты контролируешь свои деньги."},
     WEALTH_OPA_GRP_NAME: {EN: "wealth-opa", RU: "кошелек-опа"},
@@ -26,8 +26,8 @@ _locale = {
     BALANCE_OPA_DESC: {EN: "Get info about not your savings.", RU: "Смотреть на сколько не у вас не хватает денег."},
     BALANCE_DESC: {EN: "Get info about your savings.", RU: "Смотреть на сколько у вас не хватает денег."},
     USER_CREATED: {
-        EN: f"You don't seem to be in my database. I will add you to it. Now you can check your balance, tranfer {WEALTH_NAME_EN} and accept the transfer.",
-        RU: f"Похоже, вас нету в моей базе данных. Я добавлю вас в нее. Теперь вы можете проверять свой баланс, отправлять и принимать {WEALTH_NAME_RU}."},
+        EN: f"You don't seem to be in my database. I will add you to it. Now you can check your balance, tranfer currency and accept the transfer.",
+        RU: f"Похоже, вас нету в моей базе данных. Я добавлю вас в нее. Теперь вы можете проверять свой баланс, отправлять и принимать валюту."},
     TRANSFFERED: {
         EN: "You have transferred {wealth} to the user \"{user2}\"",
         RU: "Вы перевели {wealth} пользователю \"{user2}\"."},
@@ -35,8 +35,8 @@ _locale = {
         EN: "Ouh nyo! You not in by database. Please execute \"/wallet balance\" command to fix it.",
         RU: "Оу нет! Вас нету в моей базе данных. Выполните комманду \"/кошелек баланс\" что бы пофиксить это."},
     USER2_NOT_IN_DB: {
-        EN: f"Ouh nyo! You are trying to trasfer {WEALTH_NAME_EN} to someone who is not in my database",
-        RU: f"Оу нет! Вы пытаетесь перевести {WEALTH_NAME_RU} пользователю, которого нету в моей базе данных."},
+        EN: f"Ouh nyo! You are trying to trasfer currency to someone who is not in my database",
+        RU: f"Оу нет! Вы пытаетесь перевести валюту пользователю, которого нету в моей базе данных."},
     NOT_ENOUGH_MONEY: {
         EN: "You are trying to transfer {value}, but you only have {wealth}.",
         RU: "Вы пытаетесь прыгнуть выше головы! Невозможно перевести {value}, когда у вас всего {wealth}."},
@@ -92,7 +92,7 @@ _T = T(locale_dict=_locale)
 wealthgrp = create_group(WEALTH_GRP_NAME, WEALTH_GRP_DESC, _locale)
 
 
-def i_hate_russian_lang(interaction, val):
+def wealth_name_localize(interaction, val):
     try:
         assert interaction.client.guilds_data.get(str(interaction.guild_id))
     except:
@@ -130,7 +130,7 @@ async def balancecmd(interaction: discord.Interaction):
         await DB.execute("UPDATE users SET name = ? WHERE servid_userid = ?;", (interaction.user.name, i[0]))
         message = ls(
             GETBALANCE,
-            {VALUE: f"{i[1]} {i_hate_russian_lang(interaction, i[1])}"})
+            {VALUE: f"{i[1]} {wealth_name_localize(interaction, i[1])}"})
     else:
         await DB.execute(
             "INSERT INTO users (servid_userid, name, language) VALUES (?, ?, ?);",
@@ -176,15 +176,15 @@ async def trasfercmd(interaction: discord.Interaction, user2_id: str, value: app
     elif user1[1] - value < 0:
         stdout = ls(
             NOT_ENOUGH_MONEY, {
-                WEALTH: f"{user1[1]} {i_hate_russian_lang(interaction, user1[1])}",
-                VALUE: f"{value} {i_hate_russian_lang(interaction, value)}"})
+                WEALTH: f"{user1[1]} {wealth_name_localize(interaction, user1[1])}",
+                VALUE: f"{value} {wealth_name_localize(interaction, value)}"})
     else:
         await DB.execute("UPDATE users SET wealth = ? WHERE servid_userid = ?;", (user1[1] - value, f"{interaction.guild_id}_{interaction.user.id}"))
         user2 = await DB.execute("SELECT name, wealth, language FROM users WHERE servid_userid = ?;", (f"{interaction.guild_id}_{user2_id}",))
         await DB.execute("UPDATE users SET wealth = ? WHERE servid_userid = ?;", (user2[1] + value, f"{interaction.guild_id}_{user2_id}"))
         stdout = ls(
             TRANSFFERED, {
-                WEALTH: f"{value} {i_hate_russian_lang(interaction, value)}",
+                WEALTH: f"{value} {wealth_name_localize(interaction, value)}",
                 USER_2: user2[0]})
         success = True
 
@@ -193,10 +193,10 @@ async def trasfercmd(interaction: discord.Interaction, user2_id: str, value: app
     if success:
         stdout = ls(
             BALANCE_CHANGED + "0", {
-                "old_value": f"{user1[1]} {i_hate_russian_lang(interaction, user1[1])}",
-                "new_value": f"{user1[1] - value} {i_hate_russian_lang(interaction, user1[1] - value)}",
+                "old_value": f"{user1[1]} {wealth_name_localize(interaction, user1[1])}",
+                "new_value": f"{user1[1] - value} {wealth_name_localize(interaction, user1[1] - value)}",
                 USER: user2[0],
-                VALUE: f"{value} {i_hate_russian_lang(interaction, value)}"})
+                VALUE: f"{value} {wealth_name_localize(interaction, value)}"})
         text_out = [_T.stranslate(stdout, user1[2])]
         if message:
             text_out.append(_T.stranslate(_ls(MSG)))
@@ -207,10 +207,10 @@ async def trasfercmd(interaction: discord.Interaction, user2_id: str, value: app
             await interaction.followup.send(_T.stranslate(ls(NOT_DELIVERED, {USER: user1[0]})), ephemeral=True)
         stdout = ls(
             BALANCE_CHANGED + "1", {
-                "old_value": f"{user2[1]} {i_hate_russian_lang(interaction, user2[1])}",
-                "new_value": f"{user2[1] + value} {i_hate_russian_lang(interaction, user2[1] + value)}",
+                "old_value": f"{user2[1]} {wealth_name_localize(interaction, user2[1])}",
+                "new_value": f"{user2[1] + value} {wealth_name_localize(interaction, user2[1] + value)}",
                 USER: user1[0],
-                VALUE: f"{value} {i_hate_russian_lang(interaction, value)}"})
+                VALUE: f"{value} {wealth_name_localize(interaction, value)}"})
         text_out = [_T.stranslate(stdout, user1[2])]
         if message:
             text_out.append(_T.stranslate(_ls(MSG)))
@@ -247,7 +247,7 @@ async def balanceopacmd(interaction: discord.Interaction, user_id: str, create: 
         message = ls(
             GETBALANCE, {
                 USER: i[0],
-                VALUE: f"{i[1]} {i_hate_russian_lang(interaction, i[1])}"})
+                VALUE: f"{i[1]} {wealth_name_localize(interaction, i[1])}"})
         await interaction.followup.send((_T.stranslate(message) + _T.stranslate(ls(POV, {USER: i[0]}))))
     else:
         message = ls(NO_USER_OPA)
@@ -301,8 +301,8 @@ async def trasferopacmd(interaction: discord.Interaction, user1_id: str, user2_i
     elif user1[1] - value < 0 if user1_id != 0 else False:
         stdout = ls(
             NOT_ENOUGH_MONEY, {
-                WEALTH: f"{user1[1]} {i_hate_russian_lang(interaction, user1[1])}",
-                VALUE: f"{value} {i_hate_russian_lang(interaction, value)}"})
+                WEALTH: f"{user1[1]} {wealth_name_localize(interaction, user1[1])}",
+                VALUE: f"{value} {wealth_name_localize(interaction, value)}"})
     else:
         if user1_id != 0:
             await DB.execute("UPDATE users SET wealth = ? WHERE servid_userid = ?;", (user1[1] - value, f"{interaction.guild_id}_{user1_id}"))
@@ -311,7 +311,7 @@ async def trasferopacmd(interaction: discord.Interaction, user1_id: str, user2_i
             await DB.execute("UPDATE users SET wealth = ? WHERE servid_userid = ?;", (user2[1] + value, f"{interaction.guild_id}_{user2_id}"))
         stdout = ls(
             TRANSFFERED, {
-                WEALTH: f"{value} {i_hate_russian_lang(interaction, value)}",
+                WEALTH: f"{value} {wealth_name_localize(interaction, value)}",
                 USER_2: user2[0]})
         success = True
 
@@ -320,8 +320,8 @@ async def trasferopacmd(interaction: discord.Interaction, user1_id: str, user2_i
     if success and alarm:
         stdout = ls(
             BALANCE_CHANGED, {
-                "old_value": f"{user1[1]} {i_hate_russian_lang(interaction, user1[1])}",
-                "new_value": f"{user1[1] - value} {i_hate_russian_lang(interaction, user1[1] - value)}"})
+                "old_value": f"{user1[1]} {wealth_name_localize(interaction, user1[1])}",
+                "new_value": f"{user1[1] - value} {wealth_name_localize(interaction, user1[1] - value)}"})
         text_out = [_T.stranslate(stdout, user1[2])]
         if text1:
             text_out.append("\n")
@@ -332,8 +332,8 @@ async def trasferopacmd(interaction: discord.Interaction, user1_id: str, user2_i
             await interaction.followup.send(_T.stranslate(ls(NOT_DELIVERED, {USER: user1[0]})), ephemeral=True)
         stdout = ls(
             BALANCE_CHANGED, {
-                "old_value": f"{user2[1]} {i_hate_russian_lang(interaction, user2[1])}",
-                "new_value": f"{user2[1] + value} {i_hate_russian_lang(interaction, user2[1] + value)}"})
+                "old_value": f"{user2[1]} {wealth_name_localize(interaction, user2[1])}",
+                "new_value": f"{user2[1] + value} {wealth_name_localize(interaction, user2[1] + value)}"})
         text_out = [_T.stranslate(stdout, user2[2])]
         if text2:
             text_out.append("\n")
