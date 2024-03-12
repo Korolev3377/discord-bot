@@ -89,6 +89,24 @@ def ls(string, extras: dict = None):
     return _ls(string, extras={FORMAT: extras})
 
 
+cfg = {
+    "wealth_name": {
+        "en": "coins",
+        "ru": "монета"
+    }
+}
+
+
+def check_config(dict_to_check: dict, args: list, i=0):
+    if len(args) == 0:
+        return True, 0
+    try:
+        assert dict_to_check.get(args[0]) is not None
+    except:
+        return False, i
+    return check_config(dict_to_check.get(args[0]), args[1:], i+1)
+
+
 _ = "_"
 
 # ADMINS

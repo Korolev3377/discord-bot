@@ -66,11 +66,6 @@ if __name__ == '__main__':
             # Не зря у меня имя - Костылев.
 
         async def setup_hook(self):
-            self.tree.interaction_check = itr_check  # Проверка на возможность выполнения команд
-            self.tree.on_error = on_error_handler  # Заглушка для ошибок
-            declare_commands(self)  # Обьявить выбранные команды
-            await self.tree.set_translator(T(bot=self))  # Установка переводчика
-            await self.tree.sync()  # Синхронизация. Для обновления изменения комманд
             for i in (BotsayView,):  # Запуск постоянных View
                 self.add_view(i())
 
@@ -166,6 +161,11 @@ if __name__ == '__main__':
     @BOT.event
     async def on_ready():
         BOT.logger.info(f"Бот запущен! Имя: {BOT.user} ИД: {BOT.user.id}")
+        BOT.tree.on_error = on_error_handler  # Заглушка для ошибок
+        BOT.tree.interaction_check = itr_check  # Проверка на возможность выполнения команд
+        await BOT.tree.set_translator(T(bot=BOT))  # Установка переводчика
+        await declare_commands(BOT)  # Обьявить выбранные команды
+        await BOT.tree.sync()  # Синхронизация. Для обновления изменения комманд
 
         @atexit.register
         def bot_exit_handler():

@@ -93,23 +93,15 @@ wealthgrp = create_group(WEALTH_GRP_NAME, WEALTH_GRP_DESC, _locale)
 
 
 def wealth_name_localize(interaction, val):
-    try:
-        assert interaction.client.guilds_data.get(str(interaction.guild_id))
-    except:
-        interaction.client.logger.error(f"Ошибка в конфигурации сервера \"{interaction.guild.name}\": Нету конфигурации для сервера.")
+    status, code = check_config(interaction.client.guilds_data, [str(interaction.guild_id), "wealth_name", _T.get_lang(interaction.locale.value)])
+    codes = {0: f"Ошибка в конфигурации сервера \"{interaction.guild.name}\": Нету конфигурации для сервера.",
+             1: f"Ошибка в конфигурации сервера \"{interaction.guild.name}\": Не найден \"wealth_name\" в конфигурации сервера.",
+             2: f"Ошибка в конфигурации сервера \"{interaction.guild.name}\": В wealth_name не обнаружены en и/или ru значения!"}
+    if status:
+        return MORPH_RU.parse(_T.stranslate(ls(WEALTH_T, {'wealth_name': interaction.client.guilds_data.get(str(interaction.guild_id)).get('wealth_name').get(_T.get_lang(interaction.locale.value))})))[0].make_agree_with_number(val).word
+    else:
+        interaction.client.logger.error(codes.get(code))
         return
-        # В обычном случае эта ошибка не выйдет.
-    try:
-        assert interaction.client.guilds_data.get(str(interaction.guild_id)).get('wealth_name')
-    except:
-        interaction.client.logger.error(f"Ошибка в конфигурации сервера \"{interaction.guild.name}\": wealth_name не найден в конфигурации сервера.")
-        return
-    try:
-        assert interaction.client.guilds_data.get(str(interaction.guild_id)).get('wealth_name').get(_T.get_lang(interaction.locale.value))
-    except:
-        interaction.client.logger.error(f"Ошибка в конфигурации сервера \"{interaction.guild.name}\": В wealth_name не обнаружены en и ru значения!")
-        return
-    return MORPH_RU.parse(_T.stranslate(ls(WEALTH_T, {'wealth_name': interaction.client.guilds_data.get(str(interaction.guild_id)).get('wealth_name').get(_T.get_lang(interaction.locale.value))})))[0].make_agree_with_number(val).word
 
 
 @wealthgrp.command(name=namedesc(BALANCE_NAME, _locale), description=namedesc(BALANCE_DESC, _locale))
