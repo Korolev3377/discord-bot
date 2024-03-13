@@ -61,10 +61,6 @@ if __name__ == '__main__':
             # Это главный цикл бота. В нем идет пассивное уменьшение КД и проверка на то,
             # когда нужно будет менять Синего ника. Если вообще нужно будет.
 
-            self.sys_var = 0  # Используется для быстрой смены ботов.
-            # Предположим у меня есть бот, в котором я не хочу видеть некоторых функций. В коде я эти функции вырезаю уловием с этим значением.
-            # Не зря у меня имя - Костылев.
-
         async def setup_hook(self):
             for i in (BotsayView,):  # Запуск постоянных View
                 self.add_view(i())
@@ -165,7 +161,6 @@ if __name__ == '__main__':
         BOT.tree.interaction_check = itr_check  # Проверка на возможность выполнения команд
         await BOT.tree.set_translator(T(bot=BOT))  # Установка переводчика
         await declare_commands(BOT)  # Обьявить выбранные команды
-        await BOT.tree.sync()  # Синхронизация. Для обновления изменения комманд
 
         @atexit.register
         def bot_exit_handler():
@@ -193,7 +188,11 @@ if __name__ == '__main__':
             if message.author == BOT.user or message.author.bot:
                 return
 
-            if message.guild.get_member(872406824765251594) and BOT.sys_var == 0:
+            status, code = check_config(BOT.guilds_data, [str(message.guild.id), "fact_word_react"])
+            v = False
+            if status:
+                v = BOT.guilds_data.get(str(message.guild.id)).get("fact_word_react")
+            if v is False:
                 return
 
             msg = message.content.lower()

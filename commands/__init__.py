@@ -20,15 +20,10 @@ COMMANDS_DICT = {
 
 
 async def declare_commands(bot):
-    commands_to_declare = []
-    if bot.sys_var == 0:
-        commands_to_declare = [admingrp, fungrp, facts, cults, rolldice, facts_ignore, facts_count, wealthgrp, wealthopagrp]
-    elif bot.sys_var == 1:
-        commands_to_declare = [cults, rolldice, facts_ignore, facts_count]
-    for i in commands_to_declare:
-        bot.tree.add_command(i)
-    # Discord.py не поддерживает аргумент guilds, Так что код ниже пока закомменчен. Мда...
-    """async for g in bot.fetch_guilds():  # Загрузка конфига комманд для каждого сервера.
+    bot.logger.info("Запущено обновление команд.")
+    async for g in bot.fetch_guilds():  # Загрузка конфига комманд для каждого сервера.
+        bot.tree.clear_commands(guild=g)
+        bot.tree.add_command(admingrp, guild=g)
         for k, v in COMMANDS_DICT.items():
             status, code = check_config(bot.guilds_data, [str(g.id), "commands_to_declare", k])
             codes = {
@@ -37,7 +32,9 @@ async def declare_commands(bot):
                 2: f"Ошибка в конфигурации сервера \"{g.name}\": Отсутствует \"{k}\" в \"commands_to_declare\""
             }
             if status:
-                if bot.guilds_data.get(str(g.id)).get("commands_to_declare").get(k) is not None:
+                if bot.guilds_data.get(str(g.id)).get("commands_to_declare").get(k):
                     bot.tree.add_command(v, guild=g)
             else:
-                bot.logger.error(codes.get(code))"""
+                bot.logger.error(codes.get(code))
+        await bot.tree.sync(guild=g)  # Синхронизация. Для обновления изменения комманд
+    bot.logger.info("Обновление команд завершено.")
