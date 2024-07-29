@@ -77,6 +77,10 @@ if __name__ == '__main__':
                     await DB.execute("INSERT INTO servers_config (server_id, cfg_data) VALUES (?, ?);",
                                      (str(g.id), pik.dumps(self.guilds_data[str(g.id)])))
 
+                self.guilds_data[str(g.id)] = config_autofix(self.guilds_data[str(g.id)], CONFIG.DEFAULT_CFG)
+                await DB.execute("UPDATE servers_config SET cfg_data = ? WHERE server_id = ?;",
+                                 ((pik.dumps(self.guilds_data[str(g.id)])), str(g.id)))
+
 
     BOT = Bot()
     _F = Facts(BOT.logger)

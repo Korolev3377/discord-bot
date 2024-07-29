@@ -34,6 +34,8 @@ WEALTH = "wealth"
 SCORE = "score"
 LANGUAGE = "language"
 IS_VISIBLE = "is_visible"
+YES = "yes"
+NO = "no"
 
 # Замочег для базы данных.
 LOCK = asyncio.Lock()
@@ -105,6 +107,16 @@ def check_config(dict_to_check: dict, args: list, i=0):
     except:
         return False, i
     return check_config(dict_to_check.get(args[0]), args[1:], i+1)
+
+
+def config_autofix(server_config: dict, default_config: dict):
+    server_config = dict(server_config)
+    for key, value in default_config.items():
+        if server_config.get(key) is None:
+            server_config[key] = value
+        elif server_config.get(key) is dict:
+            server_config[key] = config_autofix(server_config.get(key), value)
+    return server_config
 
 
 _ = "_"

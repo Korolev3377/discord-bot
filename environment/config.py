@@ -9,22 +9,28 @@ CONFIG.CMD_PREFIX = when_mentioned_or(">_", "!")
 CONFIG.INTENTS = Intents.all()
 
 CONFIG.DEFAULT_CFG = {
-  "wealth_name": {  # Имена для валюты.
+  "wealth_name": {
     "en": "coins",
     "ru": "монета"
   },
-  "commands_to_declare": {  # True - что бы комманда была добавлена на сервер. False - для обратного эффекта.
+  "commands_to_declare": {
     # Regular Commands
-    "facts": False,  # Команда для вывода забавного факта.
-    "facts_ignore": False,  # Комманада для пользователей, что бы они могли отключать реакцию на слово факт в чате.
-    "facts_count": False,  # Комманда для подсчета количества фактов в базе данных.
-    "cults": False,  # Комманда для подсчета культов на сервере [Cult of _] & etc.
-    "rolldice": False,  # Комманда для кидания DnD кубика.
+    "facts": False,
+    "facts_ignore": False,
+    "facts_count": False,
+    "cults": False,
+    "rolldice": False,
     # Fun Commands Group
-    "fungrp": False,  # Тут много игровых комманд.
+    "fungrp": False,
     # Wealth Commands
-    "wealthgrp": False,  # Тут коммадны для управления финансами пользователей.
-    "wealthopagrp": False  # Тут для администрирования фанансов сервера.
+    "wealthgrp": False,
+    "wealthopagrp": False
   },
-  "fact_word_react": False  # Отключает реагирование на слово "факт" в чате.
+  "fact_word_react": False,
+  "server_member_join_leave": {
+    "enable": False,
+    "on_join": "{user} :inbox_tray:",
+    "on_leave": "{user} :outbox_tray:",
+    "channel_id": ""
+  }
 }

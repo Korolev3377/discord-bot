@@ -285,7 +285,7 @@ async def cults(interaction: discord.Interaction, sortby: app_commands.Choice[in
 )
 @app_commands.rename(dice_args=namedesc(DICEARGS, _locale))
 async def rolldice(interaction: discord.Interaction, *, dice_args: str):
-    await interaction.response.defer(ephemeral=True, thinking=True)
+    await interaction.response.defer(ephemeral=False, thinking=True)
     _T.set_language(interaction.locale)
     results = {}
     dices = re.findall(r'(\d*)([dк])(\d+)([+-\\*/]?)(\d+)?', dice_args)

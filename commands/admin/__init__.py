@@ -13,7 +13,7 @@ from commands.database import DB
 from translator.__init__ import T
 from environment.variable import *
 
-_locale: dict = {
+_locale: dict = {  # TODO добавить перевод на embed конфигуратор
   ADMIN_GRP_NAME: {EN: "opa",
                    RU: "опа"},
   ADMIN_GRP_DESC: {EN: "Admins thing",
@@ -195,100 +195,201 @@ async def channel_autocomplite(interaction: discord.Interaction, current: str):
           for channel in interaction.guild.channels
           if current in channel.name and channel.type.value in (0,)][:25]
 
-
-"""@admingrp.command(
-    name=namedesc(SHOPADDROLE_CMD_NAME, _locale),
-    description=namedesc(SHOPADDROLE_CMD_DESC, _locale),
-    extras={IS_OWNER_ONLY: True}
+@admingrp.command(
+  name=namedesc("config_embed_cmd_name", _locale),
+  description=namedesc("config_embed_cmd_desc", _locale)
 )
-@app_commands.rename(role=namedesc(ROLE, _locale), cost=namedesc(COST, _locale), stock=namedesc(STOCK, _locale),
-                     visible=namedesc(VISIBLE, _locale))
-async def shopaddrolecmd(interaction: discord.Interaction, role: discord.Role, cost: app_commands.Range[int, -1],
-                         stock: app_commands.Range[int, -1], visible: bool = True):
-    await interaction.response.defer(thinking=True, ephemeral=True)
-    cfg_data = interaction.client.guilds_data.get(interaction.guild.id)
-    if cfg_data:
-        rts = cfg_data.get("roles_to_sale") or {}
+async def configembedcmd(interaction: discord.Interaction):
+  await interaction.response.defer(thinking=True, ephemeral=True)
+  _T.set_language(language=interaction.locale)
+  # _T.set_string(string=ls(EXAMPLE_CMD_ANSWER, {"_": _T.stranslate(st=_ls(FORMAT_STRING))}))
+  # await interaction.followup.send(_T.stranslate())
+  configview = ConfigView(interaction.client.guilds_data[str(interaction.guild_id)], interaction)
+  embed = discord.Embed(title=_T.stranslate(st=_ls("bot_settings")), description=configview.menu_dict.get("info"))
+  embed = configview.update_embed(embed)
+  await interaction.followup.send(
+    "Нажимайте аккуратнее. Подтверждения  `Вы уверены что хотите сделать то-то то-то?`  НЕ будет!",
+    embed=embed,
+    view=configview)
+
+
+class ConfigView(discord.ui.View):
+  def __init__(self, original_config_dict, interaction):
+    super().__init__()
+    self.page = 0
+    self.selected = 0
+    self.embed = None
+    self.path_to_menu = []
+    self.menu_dict = dict(original_config_dict)  # TODO сделать разделение на страницы тут
+    self.interaction = interaction
+
+    self.add_item(ConfigViraButton())
+    self.add_item(ConfigMainaButton())
+    self.add_item(ConfigEnterButton())
+    self.add_item(ConfigBackButton())
+    # self.add_item(ConfigPrevButton())
+    # self.add_item(ConfigNextButton())
+    self.add_item(ConfigCancelButton())
+    self.add_item(ConfigSaveButton())
+    self.add_item(ConfigRestoreButton())
+
+  async def on_timeout(self):
+    for child in self.children:
+      child.disabled = True
+    await self.interaction.edit_original_response(embed=self.update_embed(self.embed), view=self)
+    self.stop()
+
+  def update_embed(self, original_embed):
+    embed = original_embed.copy()
+
+    _T.set_language(language=self.interaction.locale)
+
+    embed.clear_fields()
+    if len(self.path_to_menu) == 0:
+      embed.description = _T.stranslate(_ls("main_menu"))
     else:
-        cfg_data["roles_to_sale"] = {}
-        rts = cfg_data.get("roles_to_sale") or {}
+      embed.description = self.path_to_menu[-1]
 
-    role_data = rts.get(str(role.id)) or {}
+    i = 0
 
-    role_data["id"] = str(role.id)
-    role_data["name"] = role.name
-    role_data[COST] = cost if cost >= 0 else None
-    role_data[STOCK] = stock if stock >= 0 else None
-    role_data[VISIBLE] = visible
+    selected_menu = dict(self.menu_dict)
+    for path in self.path_to_menu:
+      selected_menu = selected_menu.get(path)
 
-    rts[str(role.id)] = role_data
+    for k, v in selected_menu.items():
+      embed_field_name = []
+      if i == self.selected:
+        embed_field_name.append("---> ")
+      embed_field_name.append(_T.stranslate(st=_ls(k)))
 
-    cfg_data["roles_to_sale"] = rts
-    interaction.client.guilds_data[interaction.guild.id]["roles_to_sale"] = rts
-    await DB.execute("UPDATE servers_config SET cfg_data = ? WHERE server_id IS ?;",
-                     (pik.dumps(cfg_data), interaction.guild.id))
-    await interaction.followup.send("d0ne", ephemeral=True)"""
-
-
-@admingrp.command(
-  name=namedesc(CFG_GET_CMD_NAME, _locale),
-  description=namedesc(CFG_GET_CMD_DESC, _locale)
-)
-async def cfggcmd(interaction: discord.Interaction):
-  await interaction.response.defer(ephemeral=True, thinking=True)
-  _T.set_language(language=interaction.locale)
-  with open("config.json", "w") as f:
-    json.dump(interaction.client.guilds_data[str(interaction.guild_id)], fp=f, indent="  ", ensure_ascii=False)
-  _T.set_string(string=ls(CFG_FOR_SERVER, {"new?": "", "serv_name": interaction.guild.name}))
-  await interaction.followup.send(_T.stranslate(), file=discord.File(r"config.json"))
+      embed_field_value = []
+      if type(v) is dict:
+        embed_field_value.append("= " + _T.stranslate(st=_ls("menu")))
+      elif type(v) is bool:
+        embed_field_value.append("- " + [_T.stranslate(st=_ls(NO)), _T.stranslate(st=_ls(YES))][bool(v)])
+      elif v is None or len(v) == 0:
+        embed_field_value.append("- " + _T.stranslate(st=_ls("none")))
+      else:
+        embed_field_value.append("- `" + v + "`")
+      embed.add_field(name="".join(embed_field_name), value="".join(embed_field_value), inline=False)
+      i += 1
+    self.embed = embed
+    return embed
 
 
-@admingrp.command(
-  name=namedesc(DEFAULT_CFG_GET_CMD_NAME, _locale),
-  description=namedesc(DEFAULT_CFG_GET_CMD_DESC, _locale)
-)
-async def dcfggcmd(interaction: discord.Interaction):
-  await interaction.response.defer(ephemeral=True, thinking=True)
-  _T.set_language(language=interaction.locale)
-  with open("config.json", "w") as f:
-    json.dump(environment.CONFIG.DEFAULT_CFG, fp=f, indent="  ", ensure_ascii=False)
-  _T.set_string(string=ls(DEFAULT_CFG_FOR_SERVER))
-  await interaction.followup.send(_T.stranslate(), file=discord.File(r"config.json"))
+class ConfigViraButton(discord.ui.Button):
+  def __init__(self):
+    super().__init__(label="↑ Вира ↑", disabled=False, row=0, custom_id="vira")
+
+  async def callback(self, interaction):
+    if self.view.selected > 0:
+      self.view.selected -= 1
+    await interaction.response.edit_message(embed=self.view.update_embed(self.view.embed))
 
 
-@admingrp.command(
-  name=namedesc(CFG_LOAD_CMD_NAME, _locale),
-  description=namedesc(CFG_LOAD_CMD_DESC, _locale)
-)
-async def cfglcmd(interaction: discord.Interaction):
-  await interaction.response.defer(ephemeral=True, thinking=True)
-  _T.set_language(language=interaction.locale)
-  det_msg = await interaction.user.send(_T.stranslate(st=ls(GIMME_CONFIG, {"serv_name": interaction.guild.name})))
-  await interaction.followup.send(_T.stranslate(st=ls(DETALS_IN_PM, {"msg_link": det_msg.jump_url})))
+class ConfigMainaButton(discord.ui.Button):
+  def __init__(self):
+    super().__init__(label="↓ Майна ↓", disabled=False, row=0, custom_id="maina")
 
-  def check(msg):
-    return msg.channel == interaction.user.dm_channel
+  async def callback(self, interaction):
+    if self.view.selected < len(self.view.embed.fields) - 1:
+      self.view.selected += 1
+    await interaction.response.edit_message(embed=self.view.update_embed(self.view.embed))
 
-  try:
-    message = await interaction.client.wait_for("message", timeout=300, check=check)
-  except asyncio.TimeoutError:
-    _T.set_string(string=ls(ASYNCIO_TIMEOUT_ERROR))
-    await det_msg.reply(_T.stranslate())
-  else:
-    if len(message.attachments) > 0:
-      file = await message.attachments[0].read()
-      data = json.loads(file.decode("utf-8"))
-      interaction.client.guilds_data[str(interaction.guild_id)] = data
-      await DB.execute("UPDATE servers_config SET cfg_data = ? WHERE server_id = ?;",
-                       (pik.dumps(data), str(interaction.guild_id)))
 
-      with open("config.json", "w") as f:
-        json.dump(interaction.client.guilds_data[str(interaction.guild_id)], fp=f, indent="  ",
-                  ensure_ascii=False)
-      _T.set_string(
-        string=ls(CFG_FOR_SERVER, {"new?": _T.stranslate(st=ls(NEW)), "serv_name": interaction.guild.name}))
-      await message.reply(_T.stranslate(), file=discord.File(r"config.json"))
-      await commands.declare_commands(interaction.client)  # Применение конфига на команды
-    else:
-      _T.set_string(string=ls(NO_FILE_DETECTED))
-      await message.reply(_T.stranslate())
+class ConfigEnterButton(discord.ui.Button):
+  def __init__(self):
+    super().__init__(label="Ввод", disabled=False, style=discord.ButtonStyle.blurple, row=0, custom_id="enter")
+
+  async def callback(self, interaction):
+    selected_menu = dict(self.view.menu_dict)
+    for path in self.view.path_to_menu:
+      selected_menu = selected_menu.get(path)
+    if type(selected_menu.get(list(selected_menu.keys())[self.view.selected])) is dict:
+      self.view.path_to_menu.append(list(selected_menu.keys())[self.view.selected])
+      self.view.selected = 0
+      await interaction.response.edit_message(embed=self.view.update_embed(self.view.embed))
+    elif type(selected_menu.get(list(selected_menu.keys())[self.view.selected])) is bool:
+      keys = list(self.view.path_to_menu)
+      keys.append(list(selected_menu.keys())[self.view.selected])
+      new_value = not selected_menu.get(list(selected_menu.keys())[self.view.selected])
+      edited_menu_dict = self.view.menu_dict
+
+      for key in keys[:-1]:
+        edited_menu_dict = edited_menu_dict[key]
+
+      edited_menu_dict[keys[-1]] = new_value
+      await interaction.response.edit_message(embed=self.view.update_embed(self.view.embed))
+    elif type(selected_menu.get(list(selected_menu.keys())[self.view.selected])) is str:
+      keys = list(self.view.path_to_menu)
+      keys.append(list(selected_menu.keys())[self.view.selected])
+
+      class TextEditModal(discord.ui.Modal):
+        def __init__(self, view):
+          super().__init__(title=_T.stranslate(_ls("modal_field_editing")))
+          self.view = view
+          self.add_item(discord.ui.TextInput(label=list(selected_menu.keys())[self.view.selected],
+                                             default=list(selected_menu.values())[self.view.selected], required=False))
+
+        async def on_submit(self, interaction):
+          new_value = str(self.children[0])
+          edited_menu_dict = self.view.menu_dict
+          for key in keys[:-1]:
+            edited_menu_dict = edited_menu_dict[key]
+          edited_menu_dict[keys[-1]] = new_value
+          await interaction.response.edit_message(embed=self.view.update_embed(self.view.embed))
+
+      await interaction.response.send_modal(TextEditModal(self.view))
+
+
+class ConfigBackButton(discord.ui.Button):
+  def __init__(self):
+    super().__init__(label="Назад", disabled=False, row=0, custom_id="back")
+
+  async def callback(self, interaction):
+    if len(self.view.path_to_menu) > 0:
+      self.view.path_to_menu.pop(-1)
+    self.view.selected = 0
+    await interaction.response.edit_message(embed=self.view.update_embed(self.view.embed))
+
+
+class ConfigPrevButton(discord.ui.Button):  # TODO перелистывания страниц
+  def __init__(self):
+    super().__init__(label="<<< Пред. страница", disabled=True, row=1, custom_id="prev")
+
+
+class ConfigNextButton(discord.ui.Button):  # TODO перелистывание страниц
+  def __init__(self):
+    super().__init__(label="След. страница >>>", disabled=True, row=1, custom_id="next")
+
+
+class ConfigCancelButton(discord.ui.Button):
+  def __init__(self):
+    super().__init__(label="Галя, у нас отмена", disabled=False, style=discord.ButtonStyle.red, row=2,
+                     custom_id="cancel")
+
+  async def callback(self, interaction):
+    for child in self.view.children:
+      child.disabled = True
+    await interaction.response.edit_message(embed=self.view.update_embed(self.view.embed), view=self.view)
+    self.view.stop()
+
+
+class ConfigSaveButton(discord.ui.Button):
+  def __init__(self):
+    super().__init__(label="Спаси и сохрани", disabled=False, style=discord.ButtonStyle.green, row=2, custom_id="save")
+
+  async def callback(self, interaction):
+    for child in self.view.children:
+      child.disabled = True
+    await interaction.response.edit_message(embed=self.view.update_embed(self.view.embed), view=self.view)
+    interaction.client.guilds_data[str(interaction.guild_id)] = self.view.menu_dict
+    await DB.execute("UPDATE servers_config SET cfg_data = ? WHERE server_id = ?;",
+                     (pik.dumps(self.view.menu_dict), str(interaction.guild_id)))
+    self.view.stop()
+    await commands.declare_commands(interaction.client)
+
+
+class ConfigRestoreButton(discord.ui.Button):
+  def __init__(self):
+    super().__init__(label="Сбросить к заводским", disabled=True, row=2, custom_id="restore")
