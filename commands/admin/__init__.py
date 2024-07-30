@@ -142,7 +142,7 @@ _locale: dict = {
   "on_leave": {EN: "Message when leaving the server ",
                RU: "Сообщение при выходе с сервера"},
   "channel_id": {EN: "Channel where messages will be sent when a member joins/leaves from the server",
-                 RU: "Канал куда будут отправляться сообщения в входе/выходе"}
+                 RU: "Канал куда будут отправляться сообщения о входе/выходе"}
 }
 
 _T = T(locale_dict=_locale)
