@@ -1,7 +1,7 @@
 import discord
 import sqlite3
 import asyncio
-import pymorphy2
+import pymorphy3
 
 from discord import app_commands
 from discord.app_commands import locale_str as _ls
@@ -11,7 +11,7 @@ from commands.database import DB
 from translator.__init__ import T
 from environment.variable import *
 
-MORPH_RU = pymorphy2.MorphAnalyzer(lang="ru")
+MORPH_RU = pymorphy3.MorphAnalyzer(lang="ru")
 
 _locale = {
     GETBALANCE: {EN: "You have {value}.", RU: "У тебя есть {value}."},
