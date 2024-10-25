@@ -32,5 +32,12 @@ CONFIG.DEFAULT_CFG = {
     "on_join": "{user_name} {user_mention} {user_id} :inbox_tray:",
     "on_leave": "{user_name} {user_mention} {user_id} :outbox_tray:",
     "channel_id": ""
+  },
+  "discord2tg_bridge": {
+    "enable_d2t": False,
+    "enable_from_discord": False,
+    "from_discord": "1097184819085054103:2064",
+    "enable_from_tg": False,
+    "from_tg": "0:1097184819085054103 2064:1097184819085054103"
   }
 }
