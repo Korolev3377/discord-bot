@@ -149,18 +149,16 @@ _locale: dict = {
                  RU: "Канал куда будут отправляться сообщения о входе/выходе"},
 
   # Discord to Telegramm Bridge
-  "discord2tg_bridge": {EN: "Мост сообщений из Дискорда в Телеграмм и обратно.",
-                        RU: "Мост сообщений из Дискорда в Телеграмм и обратно."},
   "enable_d2t": {EN: "Enable bridge between Discord and Telegramm?",
                  RU: "Включить мост сообщений между Дискордом и телеграммом?"},
   "enable_from_discord": {EN: "Отправлять сообщения с Дискорда в Телеграмм?",
                           RU: "Отправлять сообщения с Дискорда в Телеграмм?"},
-  "from_discord": {EN: "Настройка каналов отправки сообщений с Дискорда. (discord_channel_id:tg_chat_id+tg_thread_id)",
-                   RU: "Настройка каналов отправки сообщений с Дискорда. (discord_channel_id:tg_chat_id+tg_thread_id)"},
+  "from_discord": {EN: "Настройка каналов отправки сообщений с Дискорда (discord_channel_id:tg_channel_id)",
+                   RU: "Настройка каналов отправки сообщений с Дискорда (discord_channel_id:tg_channel_id)"},
   "enable_from_tg": {EN: "Отправлять сообщения с Телеграмма в Дискорд?",
                      RU: "Отправлять сообщения с Телеграмма в Дискорд?"},
-  "from_tg": {EN: "Настройка каналов отправки сообщений с Дискорда. (tg_chat_id+tg_thread_id:discord_channel_id)",
-              RU: "Настройка каналов отправки сообщений с Телеграмма. (tg_chat_id+tg_thread_id:discord_channel_id)"}
+  "from_tg": {EN: "Настройка каналов отправки сообщений с Дискорда (discord_channel_id:tg_channel_id)",
+              RU: "Настройка каналов отправки сообщений с Телеграмма (tg_channel_id:discord_channel_id)"}
 }
 
 _T = T(locale_dict=_locale)
