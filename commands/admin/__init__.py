@@ -103,7 +103,6 @@ _locale: dict = {
         RU: "Да"},
   NO: {EN: "No",
        RU: "Нет"},
-
   #
   "wealth_name": {EN: "Wealth name",
                   RU: "Название валюты"},
@@ -111,7 +110,6 @@ _locale: dict = {
        RU: "Английское"},
   RU: {EN: "Russian",
        RU: "Русское"},
-
   # Regular Commands
   "commands_to_declare": {EN: "Commands to declare",
                           RU: "Команды для регистрации на сервере"},
@@ -125,11 +123,9 @@ _locale: dict = {
             RU: "Добавить команду на вывод списка культов?"},
   "rolldice": {EN: "Add a dice roll command?",
                RU: "Добавить команду на бросок кубика?"},
-
   # Fun Commands Group
   "fungrp": {EN: "Add a group of comms for fun (GameOfLife, TicTacToe, Brainfuck)?",
              RU: "Добавить группу комманд на развлечение (GameOfLife, TicTacToe, Brainfuck)?"},
-
   # Wealth Commands
   "wealthgrp": {EN: "Add a group command to manage a personal wallet?",
                 RU: "Добавить группу команду на управление личным кошельком?"},
@@ -139,26 +135,14 @@ _locale: dict = {
                       RU: "Реагировать на слово `факт`?"},
   "server_member_join_leave": {EN: "Configuring behavior when members joins in and leaves of the server",
                                RU: "Настройка поведение при входе выходе участников с сервера"},
-  "enable": {EN: "Enable sending a notification of a member's joins/leaves to the server?",
+  "enable": {EN: "Enable sending a notification of a member's joins/leaves to the server",
              RU: "Включить отправку уведомление о входе/выходе участника?"},
   "on_join": {EN: "Message when logging in to the server",
               RU: "Сообщение при входе на сервер"},
   "on_leave": {EN: "Message when leaving the server ",
                RU: "Сообщение при выходе с сервера"},
   "channel_id": {EN: "Channel where messages will be sent when a member joins/leaves from the server",
-                 RU: "Канал куда будут отправляться сообщения о входе/выходе"},
-
-  # Discord to Telegramm Bridge
-  "enable_d2t": {EN: "Enable bridge between Discord and Telegramm?",
-                 RU: "Включить мост сообщений между Дискордом и телеграммом?"},
-  "enable_from_discord": {EN: "Отправлять сообщения с Дискорда в Телеграмм?",
-                          RU: "Отправлять сообщения с Дискорда в Телеграмм?"},
-  "from_discord": {EN: "Настройка каналов отправки сообщений с Дискорда (discord_channel_id:tg_channel_id)",
-                   RU: "Настройка каналов отправки сообщений с Дискорда (discord_channel_id:tg_channel_id)"},
-  "enable_from_tg": {EN: "Отправлять сообщения с Телеграмма в Дискорд?",
-                     RU: "Отправлять сообщения с Телеграмма в Дискорд?"},
-  "from_tg": {EN: "Настройка каналов отправки сообщений с Дискорда (discord_channel_id:tg_channel_id)",
-              RU: "Настройка каналов отправки сообщений с Телеграмма (tg_channel_id:discord_channel_id)"}
+                 RU: "Канал куда будут отправляться сообщения о входе/выходе"}
 }
 
 _T = T(locale_dict=_locale)
