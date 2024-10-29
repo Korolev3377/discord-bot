@@ -4,7 +4,8 @@ import asyncio
 import time
 import logging
 import pickle as pik
-import requests as req
+import http.client as httplib
+import urllib
 
 import atexit
 import signal
@@ -194,7 +195,8 @@ if __name__ == '__main__':
         return
 
       status_d2t_0, _ = check_config(BOT.guilds_data, [str(message.guild.id), "discord2tg_bridge", "enable_d2t"])
-      status_d2t_1, _ = check_config(BOT.guilds_data, [str(message.guild.id), "discord2tg_bridge", "enable_from_discord"])
+      status_d2t_1, _ = check_config(BOT.guilds_data,
+                                     [str(message.guild.id), "discord2tg_bridge", "enable_from_discord"])
       status_d2t_2, _ = check_config(BOT.guilds_data, [str(message.guild.id), "discord2tg_bridge", "from_discord"])
       if status_d2t_0 and status_d2t_1 and status_d2t_2:
         if BOT.guilds_data.get(str(message.guild.id)).get("discord2tg_bridge", "enable_d2t"):
@@ -202,10 +204,32 @@ if __name__ == '__main__':
             mfilter = BOT.guilds_data.get(str(message.guild.id)).get("discord2tg_bridge").get("from_discord").split(" ")
             # mfilter == ["1090104010005050103:-1000202090908+2060", "1090104010005050103:-1000202090908+2060"]
             for mf in mfilter:
-              if message.channel.id == mf.split(":")[0]:  # "1090104010005050103"
+              print(message.channel.id, mf.split(":")[0])
+              print(str(message.channel.id) == mf.split(":")[0])
+              if str(message.channel.id) == mf.split(":")[0]:  # "1090104010005050103"
                 tg_chat_and_thread = mf.split(":")[1].split("+")  # ["-1000202090908", "2060"]
-                url = f"https://api.telegram.org/bot{TG_TOKEN}/sendMessage?chat_id={tg_chat_and_thread[0]}&text={message.content}&message_thread_id={tg_chat_and_thread[1]}"
-                req.post(url)
+                host = 'api.telegram.org'
+                url = '/bot' + TG_TOKEN + '/sendMessage'
+                url = url.replace("\n", "")
+                print(TG_TOKEN)
+                values = {"chat_id": tg_chat_and_thread[0],
+                          "text": message.content,
+                          "message_thread_id": tg_chat_and_thread[1]}
+
+                headers = {
+                  'User-Agent': 'python',
+                  'Content-Type': 'application/x-www-form-urlencoded',
+                }
+
+                values = urllib.parse.urlencode(values)
+
+                conn = httplib.HTTPSConnection(host)
+                conn.request("POST", url, values, headers)
+                response = conn.getresponse()
+
+                data = response.read()
+
+                print('Response: ', response.status, response.reason)
 
       if message.author.bot:
         return
