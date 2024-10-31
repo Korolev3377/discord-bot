@@ -64,13 +64,10 @@ class Heart:
 
           values = urllib.parse.urlencode(values)
 
-          print("2")
           conn = httplib.HTTPSConnection(host)
-          print("3")
           conn.request("POST", url, values, headers)
-          print("4")
-          # response = conn.getresponse()
-          # print(response.read())
+          response = conn.getresponse()
+          print(response.read())
           print("end")
 
     for _id, _user in dict(self.BOT.antispam).items():
