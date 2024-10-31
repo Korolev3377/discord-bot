@@ -44,9 +44,9 @@ class Heart:
     res = json.loads(response.read())
     if res.get("ok"):
       for upd in res.get("result"):
-        print("start")
+        self.BOT.logger.info("start")
         self.tg_offset = upd.get("update_id")+1
-        print("1", upd.get("message").get("text"), "/allo@MFBK_bot", upd.get("message").get("text") == "/allo@MFBK_bot")
+        self.BOT.logger.info("1", upd.get("message").get("text"), "/allo@MFBK_bot", upd.get("message").get("text") == "/allo@MFBK_bot")
         if upd.get("message").get("text") == "/allo@MFBK_bot":
           url = '/bot' + TG_TOKEN + '/sendMessage'
           url = url.replace("\n", "")
@@ -67,8 +67,8 @@ class Heart:
           conn = httplib.HTTPSConnection(host)
           conn.request("POST", url, values, headers)
           response = conn.getresponse()
-          print(response.read())
-          print("end")
+          self.BOT.logger.info(response.read())
+          self.BOT.logger.info("end")
 
     for _id, _user in dict(self.BOT.antispam).items():
       if _user.get('overload') > 0:  # Пассивное охлаждение
