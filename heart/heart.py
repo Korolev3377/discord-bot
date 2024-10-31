@@ -24,7 +24,6 @@ class Heart:
 
   @tasks.loop(seconds=loop_seconds, reconnect=False)
   async def beat(self):
-    self.BOT.logger.info(f'Цикл: {self.cycle}')
     host = 'api.telegram.org'
     url = '/bot' + TG_TOKEN + '/getUpdates'
     url = url.replace("\n", "")
