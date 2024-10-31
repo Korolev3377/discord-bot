@@ -22,7 +22,6 @@ async def declare_commands(bot):
     bot.logger.info("Запущено обновление команд.")
     async for g in bot.fetch_guilds():  # Загрузка конфига комманд для каждого сервера. И настройка конфигов пересылки сообщений...
         try:
-            bot.logger.info(["g", g.id])
             status_d2t_0, _ = check_config(bot.guilds_data, [str(g.id), "discord2tg_bridge", "enable_d2t"])
             status_d2t_1, _ = check_config(bot.guilds_data, [str(g.id), "discord2tg_bridge", "enable_from_tg"])
             status_d2t_2, _ = check_config(bot.guilds_data, [str(g.id), "discord2tg_bridge", "from_tg"])
@@ -34,11 +33,10 @@ async def declare_commands(bot):
                         bot.logger.info([mfilter])
                         for mf in mfilter:
                             bot.guilds_data[str(mf.split(":")[1].split("+")[0])] = {str(mf.split(":")[1].split("+")[1]): str(mf.split(":")[0])}
-
-            bot.tree.clear_commands(guild=g)
-            bot.tree.add_command(admingrp, guild=g)
         except: pass
 
+        bot.tree.clear_commands(guild=g)
+        bot.tree.add_command(admingrp, guild=g)
         for k, v in COMMANDS_DICT.items():
             status, code = check_config(bot.guilds_data, [str(g.id), "commands_to_declare", k])
             codes = {
