@@ -9,7 +9,6 @@ from environment import TG_TOKEN
 loop_seconds = 4.0
 cooling_rate = 1 / 0.3
 
-
 class Heart:
   cycle = 0
   step_cycle = 1
