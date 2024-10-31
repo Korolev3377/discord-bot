@@ -1,6 +1,9 @@
 import time
+import http.client as httplib
+import urllib
 
 from discord.ext import tasks
+from environment import TG_TOKEN
 
 loop_seconds = 1.0
 cooling_rate = 1/1.2
@@ -10,6 +13,7 @@ class Heart:
     cycle = 0
     step_cycle = 1
     end_cycle = 0
+    tg_offset = -1
 
     def __init__(self, bot):
         self.BOT = bot
@@ -19,9 +23,27 @@ class Heart:
 
     @tasks.loop(seconds=loop_seconds, reconnect=False)
     async def beat(self):
-        """if self.BOT.nickblue.enable:
-            if time.time() > self.BOT.nickblue.time_left:  # Идемя Врет
-                await self.BOT.nickblue.rolled()"""
+        host = 'api.telegram.org'
+        url = '/bot' + TG_TOKEN + '/sendMessage'
+        url = url.replace("\n", "")
+
+        values = {"offset": tg_offset}
+
+        headers = {
+            'User-Agent': 'python',
+            'Content-Type': 'application/x-www-form-urlencoded',
+        }
+
+        values = urllib.parse.urlencode(values)
+
+        conn = httplib.HTTPSConnection(host)
+        conn.request("GET", url, values, headers)
+
+        response = conn.getresponse()
+
+        data = response.read()
+        print(data)
+
         for _id, _user in dict(self.BOT.antispam).items():
             if _user.get('overload') > 0:  # Пассивное охлаждение
                 _user['overload'] -= cooling_rate
@@ -39,7 +61,7 @@ class Heart:
 
     @beat.before_loop
     async def before_loop(self):
-        self.BOT.logger.info('Сердце запущено!')
+        self.BOT.logger.info('Сердце запущено1!')
 
     @beat.after_loop
     async def after_loop(self):

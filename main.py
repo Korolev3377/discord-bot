@@ -180,7 +180,7 @@ if __name__ == '__main__':
 
   @BOT.event
   async def on_connect():
-    BOT.logger.info("Соединение с Дискордом установлено!")
+    BOT.logger.info("Соединение с Дискордом установлено1!")
 
 
   @BOT.event
@@ -204,14 +204,12 @@ if __name__ == '__main__':
             mfilter = BOT.guilds_data.get(str(message.guild.id)).get("discord2tg_bridge").get("from_discord").split(" ")
             # mfilter == ["1090104010005050103:-1000202090908+2060", "1090104010005050103:-1000202090908+2060"]
             for mf in mfilter:
-              print(message.channel.id, mf.split(":")[0])
-              print(str(message.channel.id) == mf.split(":")[0])
               if str(message.channel.id) == mf.split(":")[0]:  # "1090104010005050103"
                 tg_chat_and_thread = mf.split(":")[1].split("+")  # ["-1000202090908", "2060"]
                 host = 'api.telegram.org'
                 url = '/bot' + TG_TOKEN + '/sendMessage'
                 url = url.replace("\n", "")
-                print(TG_TOKEN)
+
                 values = {"chat_id": tg_chat_and_thread[0],
                           "text": f"{message.author.name}: {message.content}",
                           "message_thread_id": tg_chat_and_thread[1]}
@@ -225,11 +223,6 @@ if __name__ == '__main__':
 
                 conn = httplib.HTTPSConnection(host)
                 conn.request("POST", url, values, headers)
-                response = conn.getresponse()
-
-                data = response.read()
-
-                print('Response: ', response.status, response.reason)
 
       if message.author.bot:
         return
