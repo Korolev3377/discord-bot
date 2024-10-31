@@ -62,21 +62,10 @@ class Heart:
             values = urllib.parse.urlencode(values)
             conn = httplib.HTTPSConnection(host)
             conn.request("POST", url, values, headers)
-          self.BOT.logger.info(["len(guilds)", len(self.BOT.guilds)])
-          for g in self.BOT.guilds:
-            self.BOT.logger.info(["g", g.id])
-            status_d2t_0, _ = check_config(self.BOT.guilds_data, [str(g.id), "discord2tg_bridge", "enable_d2t"])
-            status_d2t_1, _ = check_config(self.BOT.guilds_data, [str(g.id), "discord2tg_bridge", "enable_from_tg"])
-            status_d2t_2, _ = check_config(self.BOT.guilds_data, [str(g.id), "discord2tg_bridge", "from_tg"])
-            if status_d2t_0 and status_d2t_1 and status_d2t_2:
-              if self.BOT.guilds_data.get(str(g.id)).get("discord2tg_bridge", "enable_d2t"):
-                if self.BOT.guilds_data.get(str(g.id)).get("discord2tg_bridge", "enable_from_tg"):
-                  mfilter = self.BOT.guilds_data.get(str(g.id)).get("discord2tg_bridge").get("from_tg").split(" ")
-                  # mfilter == ["1090104010005050103:-1000202090908+2060", "1090104010005050103:-1000202090908+2060"]
-                  if str(upd.get("message").get("chat").get("id")) == mf.split(":")[1].split("+")[0] and str(upd.get("message").get("message_thread_id")) == mf.split(":")[1].split("+")[1]:  # ["-1000202090908", "2060"]
-                    discord_channel_id = mf.split(":")[0]  # "1090104010005050103"
-                    self.BOT.logger.info(["discord_channel_id", discord_channel_id])
-                    await self.BOT.get_channel(int(discord_channel_id)).send(f"{upd.get('message').get('from').get('username')}:\n{upd.get('message').get('text')}")
+          self.BOT.guilds_data.get(str(upd.get("message").get("chat").get("id"))).get(str(upd.get("message").get("message_thread_id")))
+          discord_channel_id = mf.split(":")[0]  # "1090104010005050103"
+          self.BOT.logger.info(["discord_channel_id", discord_channel_id])
+          await self.BOT.get_channel(int(discord_channel_id)).send(f"{upd.get('message').get('from').get('username')}:\n{upd.get('message').get('text')}")
       except:
         pass
 
