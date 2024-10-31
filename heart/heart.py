@@ -24,7 +24,6 @@ class Heart:
 
   @tasks.loop(seconds=loop_seconds, reconnect=False)
   async def beat(self):
-    self.BOT.logger.info(["тик", round(self.cycle)])
     host = 'api.telegram.org'
     url = '/bot' + TG_TOKEN + '/getUpdates'
     url = url.replace("\n", "")
@@ -44,15 +43,13 @@ class Heart:
     res = json.loads(response.read())
     if res.get("ok"):
       for upd in res.get("result"):
-        self.BOT.logger.info("start")
         self.tg_offset = upd.get("update_id")+1
-        self.BOT.logger.info(["1", upd.get("message").get("text"), "/allo@MFBK_bot", upd.get("message").get("text") == "/allo@MFBK_bot"])
         if upd.get("message").get("text") == "/allo@MFBK_bot":
           url = '/bot' + TG_TOKEN + '/sendMessage'
           url = url.replace("\n", "")
 
           values = {"chat_id": upd.get("message").get("chat").get("id"),
-                    "text": f"chat.id = {upd.get('message').get('chat').get('id')}\n{upd.get('message').get('message_thread_id')}",
+                    "text": f"\"chat.id\" = {upd.get('message').get('chat').get('id')}\n\"message_thread_id\" = {upd.get('message').get('message_thread_id')}",
                     "reply_parameters": f'{{"message_id": {upd.get("message").get("message_id")}, "chat_id": {upd.get("message").get("chat").get("id")}}}',
                     "message_thread_id": upd.get("message").get("message_thread_id")}
 
@@ -61,14 +58,11 @@ class Heart:
             'Content-Type': 'application/x-www-form-urlencoded',
           }
 
-          self.BOT.logger.info(values)
           values = urllib.parse.urlencode(values)
-          self.BOT.logger.info(values)
           conn = httplib.HTTPSConnection(host)
           conn.request("POST", url, values, headers)
-          response = conn.getresponse()
-          self.BOT.logger.info(response.read())
-          self.BOT.logger.info("end")
+          # response = conn.getresponse()
+          # self.BOT.logger.info(response.read())
 
     for _id, _user in dict(self.BOT.antispam).items():
       if _user.get('overload') > 0:  # Пассивное охлаждение
