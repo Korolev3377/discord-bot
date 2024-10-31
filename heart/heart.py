@@ -62,8 +62,9 @@ class Heart:
             'Content-Type': 'application/x-www-form-urlencoded',
           }
 
+          self.BOT.logger.info(values)
           values = urllib.parse.urlencode(values)
-
+          self.BOT.logger.info(values)
           conn = httplib.HTTPSConnection(host)
           conn.request("POST", url, values, headers)
           response = conn.getresponse()
