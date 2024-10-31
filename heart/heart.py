@@ -45,7 +45,7 @@ class Heart:
       for upd in res.get("result"):
         print("start")
         self.tg_offset = upd.get("update_id")
-        print("1", upd.get("text") == "/allo@MFBK_bot")
+        print("1", upd.get("message").get("text"), "/allo@MFBK_bot")
         if upd.get("text") == "/allo@MFBK_bot":
           url = '/bot' + TG_TOKEN + '/sendMessage'
           url = url.replace("\n", "")
@@ -67,8 +67,8 @@ class Heart:
           print("3")
           conn.request("POST", url, values, headers)
           print("4")
-          response = conn.getresponse()
-          print(response.read())
+          # response = conn.getresponse()
+          # print(response.read())
           print("end")
 
     for _id, _user in dict(self.BOT.antispam).items():
