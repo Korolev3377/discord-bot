@@ -24,7 +24,6 @@ class Heart:
 
   @tasks.loop(seconds=loop_seconds, reconnect=False)
   async def beat(self):
-    print("1")
     host = 'api.telegram.org'
     url = '/bot' + TG_TOKEN + '/getUpdates'
     url = url.replace("\n", "")
@@ -42,12 +41,11 @@ class Heart:
     conn.request("GET", url, values, headers)
     response = conn.getresponse()
     res = json.loads(response.read())
-    print("2", res.get("ok"))
     if res.get("ok"):
-      print("3 len result", len(res.get("result")))
       for upd in res.get("result"):
-        print("4")
+        print("start")
         self.tg_offset = upd.get("update_id")
+        print("1", upd.get("text") == "/allo@MFBK_bot")
         if upd.get("text") == "/allo@MFBK_bot":
           url = '/bot' + TG_TOKEN + '/sendMessage'
           url = url.replace("\n", "")
@@ -64,11 +62,15 @@ class Heart:
 
           values = urllib.parse.urlencode(values)
 
+          print("2")
           conn = httplib.HTTPSConnection(host)
+          print("3")
           conn.request("POST", url, values, headers)
-          print("5")
+          print("4")
+          response = conn.getresponse()
+          print(response.read())
+          print("end")
 
-    print("6")
     for _id, _user in dict(self.BOT.antispam).items():
       if _user.get('overload') > 0:  # Пассивное охлаждение
         _user['overload'] -= cooling_rate
