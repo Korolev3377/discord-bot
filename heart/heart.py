@@ -27,7 +27,7 @@ class Heart:
         url = '/bot' + TG_TOKEN + '/sendMessage'
         url = url.replace("\n", "")
 
-        values = {"offset": tg_offset}
+        values = {"offset": self.tg_offset}
 
         headers = {
             'User-Agent': 'python',
