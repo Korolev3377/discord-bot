@@ -21,7 +21,7 @@ from translator import T
 from commands.admin import BotsayView
 from commands.database import DB
 
-LOGGING_MODE = logging.DEBUG
+LOGGING_MODE = logging.INFO
 
 if __name__ == '__main__':
   class Bot(commands.Bot):
