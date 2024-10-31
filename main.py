@@ -21,7 +21,7 @@ from translator import T
 from commands.admin import BotsayView
 from commands.database import DB
 
-LOGGING_MODE = logging.INFO
+LOGGING_MODE = logging.DEBUG
 
 if __name__ == '__main__':
   class Bot(commands.Bot):
@@ -211,7 +211,7 @@ if __name__ == '__main__':
                 url = url.replace("\n", "")
 
                 values = {"chat_id": tg_chat_and_thread[0],
-                          "text": f"{message.author.name}: {message.content}",
+                          "text": f"{message.author.name}:\n{message.content}",
                           "message_thread_id": tg_chat_and_thread[1]}
 
                 headers = {
