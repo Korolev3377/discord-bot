@@ -24,7 +24,7 @@ class Heart:
 
   @tasks.loop(seconds=loop_seconds, reconnect=False)
   async def beat(self):
-    self.BOT.logger.info("тик", round(self.cycle))
+    self.BOT.logger.info(["тик", round(self.cycle)])
     host = 'api.telegram.org'
     url = '/bot' + TG_TOKEN + '/getUpdates'
     url = url.replace("\n", "")
@@ -46,7 +46,7 @@ class Heart:
       for upd in res.get("result"):
         self.BOT.logger.info("start")
         self.tg_offset = upd.get("update_id")+1
-        self.BOT.logger.info("1", upd.get("message").get("text"), "/allo@MFBK_bot", upd.get("message").get("text") == "/allo@MFBK_bot")
+        self.BOT.logger.info(["1", upd.get("message").get("text"), "/allo@MFBK_bot", upd.get("message").get("text") == "/allo@MFBK_bot"])
         if upd.get("message").get("text") == "/allo@MFBK_bot":
           url = '/bot' + TG_TOKEN + '/sendMessage'
           url = url.replace("\n", "")
