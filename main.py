@@ -180,7 +180,7 @@ if __name__ == '__main__':
 
   @BOT.event
   async def on_connect():
-    BOT.logger.info("Соединение с Дискордом установлено1!")
+    BOT.logger.info("Соединение с Дискордом установлено!")
 
 
   @BOT.event
