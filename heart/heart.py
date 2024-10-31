@@ -45,7 +45,7 @@ class Heart:
     if res.get("ok"):
       for upd in res.get("result"):
         print("start")
-        self.tg_offset = upd.get("update_id")
+        self.tg_offset = upd.get("update_id")+1
         print("1", upd.get("message").get("text"), "/allo@MFBK_bot", upd.get("message").get("text") == "/allo@MFBK_bot")
         if upd.get("message").get("text") == "/allo@MFBK_bot":
           url = '/bot' + TG_TOKEN + '/sendMessage'
