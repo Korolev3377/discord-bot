@@ -42,27 +42,28 @@ class Heart:
     response = conn.getresponse()
     res = json.loads(response.read())
     if res.get("ok"):
-      for upd in res.get("result"):
-        self.tg_offset = upd.get("update_id")+1
-        if upd.get("message").get("text") == "/allo@MFBK_bot":
-          url = '/bot' + TG_TOKEN + '/sendMessage'
-          url = url.replace("\n", "")
+      try:
+        for upd in res.get("result"):
+          self.tg_offset = upd.get("update_id")+1
+          if upd.get("message").get("text") == "/allo@MFBK_bot":
+            url = '/bot' + TG_TOKEN + '/sendMessage'
+            url = url.replace("\n", "")
 
-          values = {"chat_id": upd.get("message").get("chat").get("id"),
-                    "text": f"\"chat.id\" = {upd.get('message').get('chat').get('id')}\n\"message_thread_id\" = {upd.get('message').get('message_thread_id')}",
-                    "reply_parameters": f'{{"message_id": {upd.get("message").get("message_id")}, "chat_id": {upd.get("message").get("chat").get("id")}}}',
-                    "message_thread_id": upd.get("message").get("message_thread_id")}
+            values = {"chat_id": upd.get("message").get("chat").get("id"),
+                      "text": f"\"chat.id\" = {upd.get('message').get('chat').get('id')}\n\"message_thread_id\" = {upd.get('message').get('message_thread_id')}",
+                      "reply_parameters": f'{{"message_id": {upd.get("message").get("message_id")}, "chat_id": {upd.get("message").get("chat").get("id")}}}',
+                      "message_thread_id": upd.get("message").get("message_thread_id")}
 
-          headers = {
-            'User-Agent': 'python',
-            'Content-Type': 'application/x-www-form-urlencoded',
-          }
+            headers = {
+              'User-Agent': 'python',
+              'Content-Type': 'application/x-www-form-urlencoded',
+            }
 
-          values = urllib.parse.urlencode(values)
-          conn = httplib.HTTPSConnection(host)
-          conn.request("POST", url, values, headers)
-          # response = conn.getresponse()
-          # self.BOT.logger.info(response.read())
+            values = urllib.parse.urlencode(values)
+            conn = httplib.HTTPSConnection(host)
+            conn.request("POST", url, values, headers)
+      except:
+        pass
 
     for _id, _user in dict(self.BOT.antispam).items():
       if _user.get('overload') > 0:  # Пассивное охлаждение
