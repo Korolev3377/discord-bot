@@ -6,8 +6,8 @@ import json
 from discord.ext import tasks
 from environment import TG_TOKEN
 
-loop_seconds = 1.0
-cooling_rate = 1 / 1.2
+loop_seconds = 4.0
+cooling_rate = 1 / 0.3
 
 
 class Heart:
