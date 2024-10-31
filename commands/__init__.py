@@ -31,7 +31,6 @@ async def declare_commands(bot):
           if bot.guilds_data.get(str(g.id)).get("discord2tg_bridge", "enable_from_tg"):
             mfilter = bot.guilds_data.get(str(g.id)).get("discord2tg_bridge").get("from_discord").split(" ")
             # mfilter == ["1090104010005050103:-1000202090908+2060", "1090104010005050103:-1000202090908+2060"]
-            bot.logger.info([mfilter])
             for mf in mfilter:
               bot.guilds_data[str(mf.split(":")[1].split("+")[0])] = {
                 str(mf.split(":")[1].split("+")[1]): str(mf.split(":")[0])}

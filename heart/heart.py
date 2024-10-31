@@ -24,6 +24,7 @@ class Heart:
 
   @tasks.loop(seconds=loop_seconds, reconnect=False)
   async def beat(self):
+    self.BOT.logger.info(f'Цикл: {round(self.cycle)}')
     host = 'api.telegram.org'
     url = '/bot' + TG_TOKEN + '/getUpdates'
     url = url.replace("\n", "")
@@ -63,7 +64,6 @@ class Heart:
             conn = httplib.HTTPSConnection(host)
             conn.request("POST", url, values, headers)
           discord_channel_id = self.BOT.guilds_data.get(str(upd.get("message").get("chat").get("id"))).get(str(upd.get("message").get("message_thread_id")))
-          self.BOT.logger.info(["discord_channel_id", discord_channel_id])
           await self.BOT.get_channel(int(discord_channel_id)).send(f"{upd.get('message').get('from').get('username')}:\n{upd.get('message').get('text')}")
       except:
         pass
