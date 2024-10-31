@@ -24,6 +24,7 @@ class Heart:
 
   @tasks.loop(seconds=loop_seconds, reconnect=False)
   async def beat(self):
+    print("тик", round(self.cycle))
     host = 'api.telegram.org'
     url = '/bot' + TG_TOKEN + '/getUpdates'
     url = url.replace("\n", "")
@@ -52,7 +53,8 @@ class Heart:
 
           values = {"chat_id": upd.get("message").get("chat").get("id"),
                     "text": f"chat.id = {upd.get('message').get('chat').get('id')}\n{upd.get('message').get('message_thread_id')}",
-                    "reply_parameters": {"message_id": upd.get("message").get("message_id"), "chat_id": upd.get("message").get("chat").get("id")},
+                    "reply_parameters": {"message_id": upd.get("message").get("message_id"),
+                                         "chat_id": upd.get("message").get("chat").get("id")},
                     "message_thread_id": upd.get("message").get("message_thread_id")}
 
           headers = {
