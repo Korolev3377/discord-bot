@@ -53,8 +53,7 @@ class Heart:
 
           values = {"chat_id": upd.get("message").get("chat").get("id"),
                     "text": f"chat.id = {upd.get('message').get('chat').get('id')}\n{upd.get('message').get('message_thread_id')}",
-                    "reply_parameters": {"message_id": upd.get("message").get("message_id"),
-                                         "chat_id": upd.get("message").get("chat").get("id")},
+                    "reply_parameters": f'{{"message_id": {upd.get("message").get("message_id")}, "chat_id": {upd.get("message").get("chat").get("id")}}}',
                     "message_thread_id": upd.get("message").get("message_thread_id")}
 
           headers = {
@@ -62,8 +61,8 @@ class Heart:
             'Content-Type': 'application/x-www-form-urlencoded',
           }
 
-          self.BOT.logger.info(json.dumps(values))
-          values = urllib.parse.urlencode(json.dumps(values))
+          self.BOT.logger.info(values)
+          values = urllib.parse.urlencode(values)
           self.BOT.logger.info(values)
           conn = httplib.HTTPSConnection(host)
           conn.request("POST", url, values, headers)
