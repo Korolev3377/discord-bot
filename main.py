@@ -206,23 +206,11 @@ if __name__ == '__main__':
             for mf in mfilter:
               if str(message.channel.id) == mf.split(":")[0] and message.content:  # "1090104010005050103"
                 tg_chat_and_thread = mf.split(":")[1].split("+")  # ["-1000202090908", "2060"]
-                host = 'api.telegram.org'
                 url = '/bot' + TG_TOKEN + '/sendMessage'
-                url = url.replace("\n", "")
-
                 values = {"chat_id": tg_chat_and_thread[0],
                           "text": f"{message.author.name}:\n{message.content}",
                           "message_thread_id": tg_chat_and_thread[1]}
-
-                headers = {
-                  'User-Agent': 'python',
-                  'Content-Type': 'application/x-www-form-urlencoded',
-                }
-
-                values = urllib.parse.urlencode(values)
-
-                conn = httplib.HTTPSConnection(host)
-                conn.request("POST", url, values, headers)
+                tg_req("POST", url=url, values=values)
 
       if message.author.bot:
         return

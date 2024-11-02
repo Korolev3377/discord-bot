@@ -4,7 +4,7 @@ import urllib
 import json
 
 from discord.ext import tasks
-from environment import TG_TOKEN
+from environment import TG_TOKEN, tg_req
 
 loop_seconds = 4.0
 cooling_rate = 1 / 0.3
@@ -23,44 +23,20 @@ class Heart:
 
   @tasks.loop(seconds=loop_seconds, reconnect=False)
   async def beat(self):
-    host = 'api.telegram.org'
     url = '/bot' + TG_TOKEN + '/getUpdates'
-    url = url.replace("\n", "")
-
     values = {"offset": self.tg_offset}
-
-    headers = {
-      'User-Agent': 'python',
-      'Content-Type': 'application/x-www-form-urlencoded',
-    }
-
-    values = urllib.parse.urlencode(values)
-
-    conn = httplib.HTTPSConnection(host)
-    conn.request("GET", url, values, headers)
-    response = conn.getresponse()
-    res = json.loads(response.read())
+    res = tg_req("GET", url=url, values=values)
     if res.get("ok"):
       try:
         for upd in res.get("result"):
           self.tg_offset = upd.get("update_id")+1
           if upd.get("message").get("text") == "/allo@MFBK_bot":
             url = '/bot' + TG_TOKEN + '/sendMessage'
-            url = url.replace("\n", "")
-
             values = {"chat_id": upd.get("message").get("chat").get("id"),
                       "text": f"\"chat.id\" = {upd.get('message').get('chat').get('id')}\n\"message_thread_id\" = {upd.get('message').get('message_thread_id')}",
                       "reply_parameters": f'{{"message_id": {upd.get("message").get("message_id")}, "chat_id": {upd.get("message").get("chat").get("id")}}}',
                       "message_thread_id": upd.get("message").get("message_thread_id")}
-
-            headers = {
-              'User-Agent': 'python',
-              'Content-Type': 'application/x-www-form-urlencoded',
-            }
-
-            values = urllib.parse.urlencode(values)
-            conn = httplib.HTTPSConnection(host)
-            conn.request("POST", url, values, headers)
+            tg_req("POST", url, values=values)
           if upd.get('message').get('text'):
             discord_channel_id = self.BOT.guilds_data.get(
               str(upd.get("message").get("chat").get("id"))

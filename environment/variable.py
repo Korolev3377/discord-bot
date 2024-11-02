@@ -1,4 +1,7 @@
 import asyncio
+import json
+import http.client as httplib
+import urllib
 
 import discord.ui
 from discord import app_commands
@@ -46,77 +49,93 @@ WEALTH_NAME_RU = "хекс"
 
 
 def create_group(group_name, group_desc, locale_dict):
-    return app_commands.Group(
-        name=_ls(
-            group_name,
-            extras={
-                DICT: locale_dict.get(group_name),
-                TYPE: CMD
-            }
-        ),
-        description=_ls(
-            group_desc,
-            extras={
-                DICT: locale_dict.get(group_desc),
-                TYPE: CMD
-            }
-        )
+  return app_commands.Group(
+    name=_ls(
+      group_name,
+      extras={
+        DICT: locale_dict.get(group_name),
+        TYPE: CMD
+      }
+    ),
+    description=_ls(
+      group_desc,
+      extras={
+        DICT: locale_dict.get(group_desc),
+        TYPE: CMD
+      }
     )
+  )
 
 
 def namedesc(name_desc, locale_dict):
-    return _ls(
-        name_desc,
-        extras={
-            DICT: locale_dict.get(name_desc),
-            TYPE: CMD
-        }
-    )
+  return _ls(
+    name_desc,
+    extras={
+      DICT: locale_dict.get(name_desc),
+      TYPE: CMD
+    }
+  )
 
 
 def sort_by(obj_dict, key="id", orig="id", func=sorted):
-    rev_dict = {}
-    for k, v in obj_dict.items():
-        assert v.get(key) is not None
-        rev_dict[v.get(key)] = v
-    rev_dict = dict(func(rev_dict.items()))
-    output = {}
-    for k, v in rev_dict.items():
-        assert v.get(orig) is not None
-        output[v.get(orig)] = v
-    return output
+  rev_dict = {}
+  for k, v in obj_dict.items():
+    assert v.get(key) is not None
+    rev_dict[v.get(key)] = v
+  rev_dict = dict(func(rev_dict.items()))
+  output = {}
+  for k, v in rev_dict.items():
+    assert v.get(orig) is not None
+    output[v.get(orig)] = v
+  return output
 
 
 def ls(string, extras: dict = None):
-    return _ls(string, extras={FORMAT: extras})
+  return _ls(string, extras={FORMAT: extras})
 
 
 cfg = {
-    "wealth_name": {
-        "en": "coins",
-        "ru": "монета"
-    }
+  "wealth_name": {
+    "en": "coins",
+    "ru": "монета"
+  }
 }
 
 
 def check_config(dict_to_check: dict, args: list, i=0):
-    if len(args) == 0:
-        return True, 0
-    try:
-        assert dict_to_check.get(args[0]) is not None
-    except:
-        return False, i
-    return check_config(dict_to_check.get(args[0]), args[1:], i+1)
+  if len(args) == 0:
+    return True, 0
+  try:
+    assert dict_to_check.get(args[0]) is not None
+  except:
+    return False, i
+  return check_config(dict_to_check.get(args[0]), args[1:], i + 1)
 
 
 def config_autofix(server_config: dict, default_config: dict):
-    server_config = dict(server_config)
-    for key, value in default_config.items():
-        if server_config.get(key) is None:
-            server_config[key] = value
-        elif server_config.get(key) is dict:
-            server_config[key] = config_autofix(server_config.get(key), value)
-    return server_config
+  server_config = dict(server_config)
+  for key, value in default_config.items():
+    if server_config.get(key) is None:
+      server_config[key] = value
+    elif server_config.get(key) is dict:
+      server_config[key] = config_autofix(server_config.get(key), value)
+  return server_config
+
+
+def tg_req(req_type: str, url: str, host: str = 'api.telegram.org', values: dict = None, headers: dict = None):
+  if values is None:
+    values = {}
+  if headers is None:
+    headers = {
+      'User-Agent': 'python',
+      'Content-Type': 'application/x-www-form-urlencoded',
+    }
+  url = url.replace("\n", "")
+  values = urllib.parse.urlencode(values)
+  conn = httplib.HTTPSConnection(host)
+  conn.request(req_type, url, values, headers)
+  response = conn.getresponse()
+  return json.loads(response.read())
 
 
 _ = "_"
