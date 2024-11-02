@@ -62,11 +62,15 @@ class Heart:
             conn = httplib.HTTPSConnection(host)
             conn.request("POST", url, values, headers)
           if upd.get('message').get('text'):
-            discord_channel_id = self.BOT.guilds_data.get(str(upd.get("message").get("chat").get("id"))).get(str(upd.get("message").get("message_thread_id")))
+            discord_channel_id = self.BOT.guilds_data.get(
+              str(upd.get("message").get("chat").get("id"))
+            ).get(
+              str(upd.get("message").get("message_thread_id") or "0")
+            )
             if discord_channel_id:
               await self.BOT.get_channel(int(discord_channel_id)).send(f"{upd.get('message').get('from').get('username')}:\n{upd.get('message').get('text')}")
             else:
-              self.BOT.logger.error(["d2t_b: Нету канала сообщения сообщения.", upd])
+              self.BOT.logger.error(["d2t_b: Нету канала сообщения.", upd])
           else:
             self.BOT.logger.error(["d2t_b: Нету теста сообщения.", upd])
       except:

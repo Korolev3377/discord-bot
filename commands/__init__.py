@@ -33,7 +33,8 @@ async def declare_commands(bot):
             # mfilter == ["1090104010005050103:-1000202090908+2060", "1090104010005050103:-1000202090908+2060"]
             for mf in mfilter:
               bot.guilds_data[str(mf.split(":")[1].split("+")[0])] = {
-                str(mf.split(":")[1].split("+")[1]): str(mf.split(":")[0])}
+                str(mf.split(":")[1].split("+")[1]): str(mf.split(":")[0])
+              }
     except:
       pass
 
