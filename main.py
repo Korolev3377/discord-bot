@@ -211,8 +211,7 @@ if __name__ == '__main__':
                           "text": f"{message.author.name}:\n{message.content}",
                           "message_thread_id": tg_chat_and_thread[1]}
                 upd = tg_req("POST", url=url, values=values)
-                print(upd)
-                DB.insert_d2t_data(discord_message_id=message.id,
+                await DB.insert_d2t_data(discord_message_id=message.id,
                                    tg_message_id=int(upd.get("result").get("message_thread_id") or "0"),
                                    tg_chat_id=int(upd.get("result").get("chat").get("id")))
 
