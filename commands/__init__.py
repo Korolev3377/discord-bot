@@ -6,6 +6,7 @@ from .fun import fungrp
 from .wealth import wealthgrp, wealthopagrp
 from .shop import shopgrp
 from environment.variable import *
+from commands.database import DB
 
 COMMANDS_DICT = {
   "facts": facts,
