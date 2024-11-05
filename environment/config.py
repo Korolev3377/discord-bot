@@ -36,7 +36,7 @@ CONFIG.DEFAULT_CFG = {
   "discord2tg_bridge": {
     "enable_d2t": False,
     "enable_from_discord": False,
-    "from_discord": "1097184819085054103:-1002292590998+2064",
+    "from_discord": "1000000000000000000:-1000000000000+2000",
     "enable_from_tg": False
   }
 }

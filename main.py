@@ -198,22 +198,26 @@ if __name__ == '__main__':
       status_d2t_1, _ = check_config(BOT.guilds_data,
                                      [str(message.guild.id), "discord2tg_bridge", "enable_from_discord"])
       status_d2t_2, _ = check_config(BOT.guilds_data, [str(message.guild.id), "discord2tg_bridge", "from_discord"])
+
       if status_d2t_0 and status_d2t_1 and status_d2t_2:
         if BOT.guilds_data.get(str(message.guild.id)).get("discord2tg_bridge", "enable_d2t"):
           if BOT.guilds_data.get(str(message.guild.id)).get("discord2tg_bridge", "enable_from_discord"):
+
             mfilter = BOT.guilds_data.get(str(message.guild.id)).get("discord2tg_bridge").get("from_discord").split(" ")
             # mfilter == ["1090104010005050103:-1000202090908+2060", "1090104010005050103:-1000202090908+2060"]
             for mf in mfilter:
               if str(message.channel.id) == mf.split(":")[0] and message.content:  # "1090104010005050103"
                 tg_chat_and_thread = mf.split(":")[1].split("+")  # ["-1000202090908", "2060"]
+
                 url = '/bot' + TG_TOKEN + '/sendMessage'
                 values = {"chat_id": tg_chat_and_thread[0],
                           "text": f"{message.author.name}:\n{message.content}",
                           "message_thread_id": tg_chat_and_thread[1]}
+
                 upd = tg_req("POST", url=url, values=values)
                 await DB.insert_d2t_data(discord_message_id=message.id,
-                                   tg_message_id=int(upd.get("result").get("message_thread_id") or "0"),
-                                   tg_chat_id=int(upd.get("result").get("chat").get("id")))
+                                         tg_message_id=int(upd.get("result").get("message_thread_id") or "0"),
+                                         tg_chat_id=int(upd.get("result").get("chat").get("id")))
 
       if message.author.bot:
         return

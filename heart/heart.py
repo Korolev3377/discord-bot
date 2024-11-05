@@ -27,25 +27,35 @@ class Heart:
     url = '/bot' + TG_TOKEN + '/getUpdates'
     values = {"offset": self.tg_offset}
     res = tg_req("GET", url=url, values=values)
+
     if res.get("ok"):
       try:
         for upd in res.get("result"):
           self.tg_offset = upd.get("update_id")+1
           if upd.get("message").get("text") == "/allo@MFBK_bot":
+
             url = '/bot' + TG_TOKEN + '/sendMessage'
             values = {"chat_id": upd.get("message").get("chat").get("id"),
                       "text": f"\"chat.id\" = {upd.get('message').get('chat').get('id')}\n\"message_thread_id\" = {upd.get('message').get('message_thread_id')}",
                       "reply_parameters": f'{{"message_id": {upd.get("message").get("message_id")}, "chat_id": {upd.get("message").get("chat").get("id")}}}',
                       "message_thread_id": upd.get("message").get("message_thread_id")}
             tg_req("POST", url, values=values)
+
           if upd.get('message').get('text'):
+
             discord_channel_id = self.BOT.guilds_data.get(
               str(upd.get("message").get("chat").get("id"))
             ).get(
               str(upd.get("message").get("message_thread_id") or "0")
             )
+
             if discord_channel_id:
-              discord_sended_message = await self.BOT.get_channel(int(discord_channel_id)).send(f"{upd.get('message').get('from').get('username')}:\n{upd.get('message').get('text')}")
+              if upd.get("message").get("reply_to_message"):
+                discord_message_id = await DB.select_d2t_data(id_sourse="telegramm", message_id=upd.get("message").get("reply_to_message").get("message_id"), tg_chat_id=upd.get("message").get("reply_to_message").get("chat").get("id"))
+                discord_channel = await self.BOT.get_channel(int(discord_channel_id))
+                discord_sended_message = await discord_channel.get_partial_message(discord_message_id).reply(f"{upd.get('message').get('from').get('username')}:\n{upd.get('message').get('text')}")
+              else:
+                discord_sended_message = await self.BOT.get_channel(int(discord_channel_id)).send(f"{upd.get('message').get('from').get('username')}:\n{upd.get('message').get('text')}")
               await DB.insert_d2t_data(discord_message_id=discord_sended_message.id, tg_message_id=int(upd.get("message").get("message_thread_id") or "0"), tg_chat_id=int(upd.get("message").get("chat").get("id")))
             else:
               self.BOT.logger.error(["d2t_b: Нету канала сообщения.", upd])
