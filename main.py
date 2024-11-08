@@ -209,10 +209,15 @@ if __name__ == '__main__':
               if str(message.channel.id) == mf.split(":")[0] and message.content:  # "1090104010005050103"
                 tg_chat_and_thread = mf.split(":")[1].split("+")  # ["-1000202090908", "2060"]
 
-                url = '/bot' + TG_TOKEN + '/sendMessage'
                 values = {"chat_id": tg_chat_and_thread[0],
                           "text": f"{message.author.name}:\n{message.content}",
                           "message_thread_id": tg_chat_and_thread[1]}
+                if message.reference:
+                  tg_message_id, tg_thread_id = await DB.select_d2t_data(id_sourse="discord",
+                                                                         message_id=str(message.reference.message_id))
+                  values["reply_parameters"] = f'{{"message_id": {tg_message_id}, "chat_id": {tg_thread_id}}}'
+
+                url = '/bot' + TG_TOKEN + '/sendMessage'
 
                 upd = tg_req("POST", url=url, values=values)
                 await DB.insert_d2t_data(discord_message_id=message.id,
