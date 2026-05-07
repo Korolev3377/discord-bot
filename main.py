@@ -2,19 +2,18 @@
 import logging
 import os
 import asyncio
-# ----------------------------------- #
 
 # ----- Discord Python Library ----- #
 import discord
-# ---------------------------------- #
 
 # ----- Local Modules ----- #
-from pyModules import Client
-# ------------------------- #
+from pyModules import DiscordClient, FileLock, DataBase
 
 Log = logging.getLogger(__name__)
+
 with open(os.environ.get("SATBOT_TOKEN_PATH"), 'r') as f:
     TOKEN = f.read()
+
 
 async def main():
     tasks = [
@@ -24,7 +23,9 @@ async def main():
 
 if __name__ == '__main__':
     logging.basicConfig(filename='log', level=logging.INFO)
-    client = Client(intents=discord.Intents.all())
+    client = DiscordClient(intents=discord.Intents.all())
+    with FileLock("DB.lock"):
+        ...  # DataBase
     asyncio.run(main())
 
 # TODO: Refactor
