@@ -31,7 +31,11 @@ if __name__ == '__main__':
     logging.basicConfig(filename='log', level=logging.INFO)
     client = DiscordClient(intents=discord.Intents.all())
     client.add_tree(CommandTree(client=client, commandlist=["ping"]))
-    asyncio.run(main())
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        Log.info("Programm closed with KeyboardInterrupt")
+        exit(0)
 
 # TODO: Refactor
 '''if __name__ == '__main__':
