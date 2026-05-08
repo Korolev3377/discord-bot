@@ -11,8 +11,12 @@ class DiscordClient(discord.Client):
         super().__init__(*args, **kwargs)
         self.tree = None
 
+    def add_tree(self, cmdtree):
+        self.tree = cmdtree
+
     async def setup_hook(self):
-        self.tree = discord.app_commands.CommandTree(self)
+        await self.tree.sync()
+
 
     async def on_ready(self):
         Log.info(f"SatBot online\nName: {self.user.name}\nId: {self.user.id}")

@@ -7,7 +7,7 @@ import asyncio
 import discord
 
 # ----- Local Modules ----- #
-from pyModules import DiscordClient, FileLock, DataBase
+from localModules import DiscordClient, CommandTree
 
 Log = logging.getLogger(__name__)
 
@@ -24,8 +24,7 @@ async def main():
 if __name__ == '__main__':
     logging.basicConfig(filename='log', level=logging.INFO)
     client = DiscordClient(intents=discord.Intents.all())
-    with FileLock("DB.lock"):
-        ...  # DataBase
+    client.add_tree(CommandTree(client=client, commandlist=[]))
     asyncio.run(main())
 
 # TODO: Refactor
