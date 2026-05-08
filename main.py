@@ -2,6 +2,7 @@
 import logging
 import os
 import asyncio
+import sys
 
 # ----- Discord Python Library ----- #
 import discord
@@ -22,13 +23,18 @@ else:
 
 
 async def main():
-    tasks = [
-        client.start(TOKEN, reconnect=True)
-    ]
-    await asyncio.gather(*tasks)
+    async with client:
+        tasks = [
+            client.start(TOKEN, reconnect=True)
+        ]
+        await asyncio.gather(*tasks)
 
 if __name__ == '__main__':
-    logging.basicConfig(filename='log', level=logging.INFO)
+    kwargs = dict(arg.split('=') for arg in sys.argv[1:] if '=' in arg)
+    loglevel_numeric = getattr(logging, "INFO")
+    if loglevel := kwargs.get("--log"):
+        loglevel_numeric = getattr(logging, kwargs.get("--log").upper())
+    logging.basicConfig(filename='log', level=loglevel_numeric, format="%(asctime)s [ %(levelname)-8s ] %(name)-16s -> %(message)s")
     Log.info("Programm started")
     client = DiscordClient(intents=discord.Intents.all())
     client.add_tree(CommandTree(client=client, commandlist=["ping"]))
@@ -36,7 +42,6 @@ if __name__ == '__main__':
         asyncio.run(main())
     except KeyboardInterrupt:
         Log.info("Programm closed with KeyboardInterrupt")
-        exit(0)
 
 # TODO: Refactor
 '''if __name__ == '__main__':

@@ -11,4 +11,4 @@ class CommandTree(discord.app_commands.CommandTree):
         self.clear_commands(guild=None)
         for cmd_name in commandlist:
             if command := get_command(cmd_name):
-                self.add_command(command)
+                self.add_command(command, guild=None)
