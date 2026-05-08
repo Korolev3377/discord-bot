@@ -11,8 +11,14 @@ from localModules import DiscordClient, CommandTree
 
 Log = logging.getLogger(__name__)
 
-with open(os.environ.get("SATBOT_TOKEN_PATH"), 'r') as f:
-    TOKEN = f.read()
+if token_path := os.environ.get("SATBOT_TOKEN_PATH"):
+    with open(os.path.join(token_path), 'r') as f:
+        TOKEN = f.read()
+elif token := os.environ.get("SATBOT_TOKEN"):
+    TOKEN = token
+else:
+    Log.critical("Discord token not found")
+    exit(1)
 
 
 async def main():

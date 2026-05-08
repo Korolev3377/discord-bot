@@ -1,6 +1,6 @@
 import importlib
 
-def get(cmd_name):
+def get_command(cmd_name):
     try:
         module = importlib.import_module(f"{cmd_name}", __name__)
         return getattr(module, "command")
