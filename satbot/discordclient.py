@@ -24,3 +24,9 @@ class DiscordClient(discord.Client):
         # ----- Игнорировать сообщения от себя и других ботов ----- #
         if message.author == self.user or message.author.bot:
             return
+
+    async def on_member_join(self):
+        ...
+
+    async def on_member_remove(self):
+        ...

@@ -8,7 +8,7 @@ import sys
 import discord
 
 # ----- Local Modules ----- #
-from satbot import DiscordClient, CommandTree
+from satbot import DiscordClient, CommandTree, DataBase
 
 Log = logging.getLogger(__name__)
 
@@ -33,7 +33,7 @@ if __name__ == '__main__':
     kwargs = dict(arg.split('=') for arg in sys.argv[1:] if '=' in arg)
     loglevel_numeric = getattr(logging, "INFO")
     if loglevel := kwargs.get("--log"):
-        loglevel_numeric = getattr(logging, kwargs.get("--log").upper())
+        loglevel_numeric = getattr(logging, loglevel.upper())
     logging.basicConfig(filename='log', level=loglevel_numeric, format="%(asctime)s [ %(levelname)-8s ] %(name)s:\n%(message)s\n")
 
     discordLogger = logging.getLogger('discord')
@@ -42,6 +42,7 @@ if __name__ == '__main__':
     Log.info("Programm started")
     client = DiscordClient(intents=discord.Intents.all())
     client.add_tree(CommandTree(client=client, commandlist=["ping"]))
+    client.init_db(DataBase())
     try:
         asyncio.run(main())
     except KeyboardInterrupt:
