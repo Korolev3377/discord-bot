@@ -24,7 +24,7 @@ async def main():
 if __name__ == '__main__':
     logging.basicConfig(filename='log', level=logging.INFO)
     client = DiscordClient(intents=discord.Intents.all())
-    client.add_tree(CommandTree(client=client, commandlist=[]))
+    client.add_tree(CommandTree(client=client, commandlist=["ping"]))
     asyncio.run(main())
 
 # TODO: Refactor
