@@ -8,7 +8,7 @@ import sys
 import discord
 
 # ----- Local Modules ----- #
-from satbot import DiscordClient, CommandTree, DataBase
+from satbot import Cli, CommandTree, DataBase
 
 Log = logging.getLogger(__name__)
 
@@ -40,7 +40,7 @@ if __name__ == '__main__':
     discordLogger.setLevel(logging.INFO)
 
     Log.info("Programm started")
-    client = DiscordClient(intents=discord.Intents.all())
+    client = Cli(intents=discord.Intents.all())
     client.add_tree(CommandTree(client=client, commandlist=["ping"]))
     client.init_db(DataBase())
     try:

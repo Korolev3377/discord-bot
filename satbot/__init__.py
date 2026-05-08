@@ -1,6 +1,5 @@
-from .discordclient import DiscordClient
-from .filelock import FileLock
+from .cli import Cli
 from .database import DataBase
 from .commandtree import CommandTree
 
-__all__ = [DiscordClient, FileLock, DataBase, CommandTree] # PyCharm issue
+__all__ = [Cli, DataBase, CommandTree] # PyCharm issue

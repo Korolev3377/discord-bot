@@ -6,7 +6,7 @@ import discord
 
 Log = logging.getLogger(__name__)
 
-class DiscordClient(discord.Client):
+class Cli(discord.Client):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.tree = None
