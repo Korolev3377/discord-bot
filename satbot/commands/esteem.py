@@ -9,7 +9,11 @@ import sqlite3
 
 Log = logging.getLogger(__name__)
 
-async def callback(interaction: discord.Interaction):
+@discord.app_commands.command(
+    name="esteem",
+    description="Повысь свою самооценку"
+)
+async def command(interaction: discord.Interaction):
     await interaction.response.defer(thinking=True)
     conn: sqlite3.Connection = interaction.client.db
     user_data = conn.execute("SELECT * FROM global_esteem WHERE user_id = ?;", [interaction.user.id]).fetchone()
@@ -25,9 +29,3 @@ async def callback(interaction: discord.Interaction):
         await interaction.followup.send(f"Ваша самооценка повысилась на {add_esteem} и теперь составляет {new_esteem or add_esteem}")
     else:
         await interaction.followup.send("Ваша самооценка никак не повысилась")
-
-command = discord.app_commands.Command(
-    name="esteem",
-    description="Повысь свою самооценку",
-    callback=callback
-)
