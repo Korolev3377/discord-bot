@@ -1,5 +1,6 @@
 # ----- Python Standard Library ----- #
 import logging
+import sqlite3
 
 # ----- Discord Python Library ----- #
 import discord
@@ -10,6 +11,8 @@ class Cli(discord.Client):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.tree = None
+        self.db = sqlite3.connect("database.db")
+        self.db.execute("CREATE TABLE IF NOT EXISTS global_esteem (user_id INTEGER PRIMARY KEY UNIQUE, esteem TEXT)")
 
     def add_tree(self, cmdtree):
         self.tree = cmdtree
