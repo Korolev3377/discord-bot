@@ -31,9 +31,9 @@ async def main():
 if __name__ == '__main__':
     kwargs = dict(arg.split('=') for arg in sys.argv[1:] if '=' in arg)
     loglevel_numeric = getattr(logging, "INFO")
-    if loglevel := kwargs.get("--log"):
-        if loglevel.upper() in ["DEBUG", "INFO", "ERROR", "CRITICAL"]:
-            loglevel_numeric = getattr(logging, loglevel.upper())
+    if loglevel := kwargs.get("--log").upper():
+        if loglevel in ["DEBUG", "INFO", "ERROR", "CRITICAL"]:
+            loglevel_numeric = getattr(logging, loglevel)
     logging.basicConfig(filename='log', level=loglevel_numeric, format="%(asctime)s [ %(levelname)-8s ] %(name)s:\n%(message)s\n")
 
     discordLogger = logging.getLogger('discord')

@@ -12,7 +12,7 @@ class Cli(discord.Client):
         super().__init__(*args, **kwargs)
         self.tree = None
         self.db = sqlite3.connect("database.db")
-        self.db.execute("CREATE TABLE IF NOT EXISTS global_esteem (user_id INTEGER PRIMARY KEY UNIQUE, esteem TEXT)")
+        self.db.execute("CREATE TABLE IF NOT EXISTS global_esteem (user_id INTEGER PRIMARY KEY, esteem TEXT, time INTEGER)")
 
     def add_tree(self, cmdtree):
         self.tree = cmdtree
