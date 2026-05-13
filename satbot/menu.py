@@ -52,19 +52,17 @@ class Menu:
 
             if isinstance(val, dict):
                 lines.append(f"{pointer}{key}")
-                lines.append("   `≡ Меню`" if not is_selected else "`≡ Меню`")
+                lines.append("`≡ Меню`")
             elif isinstance(val, bool):
                 lines.append(f"{pointer}{key}")
                 status = "● Да" if val else "● Нет"
-                lines.append(f"   `{status}`" if not is_selected else f"`{status}`")
+                lines.append(f"`{status}`")
             elif isinstance(val, str):
                 lines.append(f"{pointer}{key}")
-                lines.append(f"   `{val}`" if not is_selected else f"`{val}`")
+                lines.append(f"`{val}`")
             elif callable(val):
                 lines.append(f"{pointer}{key}")
-                lines.append(
-                    f"   `Выполнить`" if not is_selected else "`► Выполнить`"
-                )
+                lines.append("`► Выполнить`")
             elif val is None:
                 lines.append(f"{pointer}{key}")
 
