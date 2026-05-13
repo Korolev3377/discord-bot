@@ -28,13 +28,13 @@ class Menu:
 
     def render(self) -> str:
         """Выводит меню в текстовом формате с учетом страниц и курсора."""
-        lines = [self.title, "Меню"]
+        lines = [self.title, "# Меню"]
 
         # Добавляем хлебные крошки (название текущего подменю)
         if self.path:
-            lines.append(self.path[-1])
+            lines.append("## "+self.path[-1])
         else:
-            lines.append("Главное меню")
+            lines.append("## Главное меню")
 
         items = self._get_current_items()
         if not items:
@@ -51,20 +51,20 @@ class Menu:
             pointer = "► " if is_selected else ""
 
             if isinstance(val, dict):
-                lines.append(f"{pointer}{key}")
+                lines.append(f"### {pointer}{key}")
                 lines.append("`≡ Меню`")
             elif isinstance(val, bool):
-                lines.append(f"{pointer}{key}")
+                lines.append(f"### {pointer}{key}")
                 status = "● Да" if val else "● Нет"
                 lines.append(f"`{status}`")
             elif isinstance(val, str):
-                lines.append(f"{pointer}{key}")
+                lines.append(f"### {pointer}{key}")
                 lines.append(f"`{val}`")
             elif callable(val):
-                lines.append(f"{pointer}{key}")
+                lines.append(f"### {pointer}{key}")
                 lines.append("`► Выполнить`")
             elif val is None:
-                lines.append(f"{pointer}{key}")
+                lines.append(f"### {pointer}{key}")
 
         return "\n".join(lines)
 
