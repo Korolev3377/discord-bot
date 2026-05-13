@@ -41,7 +41,7 @@ if __name__ == '__main__':
 
     Log.info("Programm started")
     client = Cli(intents=discord.Intents.all())
-    client.add_tree(CommandTree(client=client, commandlist=["ping", "esteem"]))
+    client.add_tree(CommandTree(client=client, global_commandlist=["bot_settings"]))
     try:
         asyncio.run(main())
     except KeyboardInterrupt:
