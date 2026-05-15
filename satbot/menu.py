@@ -3,8 +3,9 @@ import json
 
 class Menu:
 
-    def __init__(self, title: str, items_map: dict | None):
-        self.title = title
+    def __init__(self, opening_lines: list, main_menu_name: str, items_map: dict | None):
+        self.opening_lines = opening_lines
+        self.main_menu_name = main_menu_name
         # Глубокое копирование через JSON для поддержки функции cancel()
         self._initial_map = json.dumps(items_map)
         self.items_map = items_map if items_map is not None else {}
@@ -28,11 +29,13 @@ class Menu:
 
     def render(self) -> str:
         """Выводит меню в текстовом формате с учетом страниц и курсора."""
-        lines = [self.title, "# Меню"]
+        lines = list(self.opening_lines)
 
         # Добавляем хлебные крошки (название текущего подменю)
         if self.path:
             lines.append("## "+self.path[-1])
+        elif self.main_menu_name:
+            lines.append(self.main_menu_name)
         else:
             lines.append("## Главное меню")
 
@@ -51,20 +54,15 @@ class Menu:
             pointer = "► " if is_selected else ""
 
             if isinstance(val, dict):
-                lines.append(f"### {pointer}{key}")
-                lines.append("`≡ Меню`")
+                lines.append(f"{pointer}`≡ {key}`")
             elif isinstance(val, bool):
-                lines.append(f"### {pointer}{key}")
-                status = "● Да" if val else "● Нет"
-                lines.append(f"`{status}`")
+                lines.append(f"{pointer}`● {key}` -> {"`Да`" if val else "`Нет`"}")
             elif isinstance(val, str):
-                lines.append(f"### {pointer}{key}")
-                lines.append(f"`{val}`")
+                lines.append(f"{pointer}`■ {key}` -> `{val}`")
             elif callable(val):
-                lines.append(f"### {pointer}{key}")
-                lines.append("`► Выполнить`")
+                lines.append(f"{pointer}`► {key}`")
             elif val is None:
-                lines.append(f"### {pointer}{key}")
+                lines.append(f"{pointer}{key}")
 
         return "\n".join(lines)
 
