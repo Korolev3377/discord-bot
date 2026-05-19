@@ -56,7 +56,8 @@ class Menu:
             if isinstance(val, dict):
                 lines.append(f"{pointer}`≡ {key}`")
             elif isinstance(val, bool):
-                lines.append(f"{pointer}`● {key}` -> {"`Да`" if val else "`Нет`"}")
+                status = "`Да`" if val else "`Нет`"
+                lines.append(f"{pointer}`● {key}` -> {status}")
             elif isinstance(val, str):
                 lines.append(f"{pointer}`■ {key}` -> `{val}`")
             elif callable(val):
